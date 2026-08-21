@@ -121,6 +121,7 @@
 ### D-019 命名与发布坐标
 
 - 日期：2026-08-22
+- 状态：已批准；其中 GitHub 组织与主仓库归属已由 D-031 修订，其他命名和发布坐标保持有效。
 - 结论：品牌展示统一使用 `ChalSense`，代码和普通标识统一使用小写 `chalsense`。GitHub 组织与主仓库目标为 `chalsense/chalsense`；Java `groupId` 与包名前缀为 `io.github.chalsense`；Maven 构件命名为 `chalsense-core`、`chalsense-protocol`、`chalsense-spring-boot-starter` 和 `chalsense-server`；npm scope 为 `@chalsense`，前端组件为 `@chalsense/widget`；容器镜像目标为 `ghcr.io/chalsense/chalsense-server`；配置前缀为 `chalsense.*`。
 - 结论：官网与域名不进入当前功能实现范围；正式公开前仍须验证 GitHub 组织、npm scope、Maven Central namespace、容器路径和商标的实际可用性与所有权。
 - 原因：统一品牌、包、构件和配置命名，减少接入歧义；将尚未注册的外部资源明确设为发布门禁，而不是假装已经占有。
@@ -213,6 +214,14 @@
 - 结论：v0.1 的 `JedisStateStore` 只公开接受池化 `RedisClient` 的构造方式，不直接接受调用方创建的 `RedisClusterClient`。不得以无法由 Store 验证的 `maxAttempts = 1` 使用约定替代安全保证。
 - 结论：Redis Cluster 支持推迟到专用适配器能够保证连接结果不确定时不重放命令，并具备真实 Cluster 重定向、迁槽、响应丢失和故障切换测试之后。Redis OSS 7.2.x / Valkey 7.2.x standalone 支持、key schema、命令和其他 D-028 结论不变。
 - 原因：一次性状态的重试边界必须由 ChalSense 实现强制保证，不能转嫁给接入方配置；宁可暂时缩小部署拓扑，也不能把已消费状态错误报告为未消费。
+
+### D-031 GitHub 主仓库归属
+
+- 日期：2026-08-22
+- 状态：已批准；部分修订 D-019。
+- 结论：当前不创建 GitHub 组织，主仓库使用个人账号下的公开仓库 `Jickfu/chalsense`。品牌名、Java/npm 坐标、配置前缀和未来容器镜像命名不因仓库归属而自动改变。
+- 边界：若未来迁移到组织仓库，必须保留 GitHub redirect、更新发布来源与安全配置，并通过新的决策记录确认；当前不预先创建或占用 `chalsense` 组织。
+- 原因：项目所有者明确选择直接使用个人账号公开托管，避免为当前实现阶段创建额外组织。
 
 ## 工作假设
 
