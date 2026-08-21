@@ -1,0 +1,138 @@
+{
+  "vectorSet": "chalsense-challenge-create-v1",
+  "status": "approved-v0.1",
+  "approvedByDecisions": ["D-013", "D-015", "D-024", "D-025", "D-026"],
+  "frozenAt": "2026-08-22",
+  "sourceDraftSha256": "e0106b7a1a0e4bb11bbb9460cdbf7287b3a80aae41ca88fd07db640fd0bc9db9",
+  "protocolVersion": "1",
+  "semantics": {
+    "authorizeBeforeGenerate": true,
+    "persistBeforeRespond": true,
+    "unknownStoreResult": "fail closed; do not retry or return challengeId",
+    "collisionRetryLimit": 3,
+    "publicGeometryExcludes": ["pieceTargetX", "tolerance"]
+  },
+  "fixtures": {
+    "siteKey": "site_demo_01",
+    "allowedAction": "login",
+    "contextDigest": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "allowedOrigin": "https://app.example.com",
+    "policyVersion": "slider-draft-1",
+    "challengeTtlMillis": 120000,
+    "now": 1787356800000,
+    "challengeIds": [
+      "AAAAAAAAAAAAAAAAAAAAAA",
+      "AQEBAQEBAQEBAQEBAQEBAQ",
+      "AgICAgICAgICAgICAgICAg"
+    ],
+    "generated": {
+      "logicalWidth": 320,
+      "logicalHeight": 180,
+      "geometry": {
+        "pieceStartX": 62500,
+        "pieceTargetX": 593750,
+        "pieceStartY": 388889,
+        "pieceWidth": 156250,
+        "pieceHeight": 277778,
+        "tolerance": 12500
+      },
+      "resources": [
+        {"role": "BACKGROUND", "url": "/resources/bg", "mediaType": "image/webp", "pixelWidth": 640, "pixelHeight": 360},
+        {"role": "PIECE", "url": "/resources/piece", "mediaType": "image/png", "pixelWidth": 100, "pixelHeight": 100}
+      ]
+    }
+  },
+  "createVectors": [
+    {
+      "id": "V-CREATE-001-trusted-success",
+      "site": "ACTIVE",
+      "caller": "TRUSTED_BACKEND",
+      "action": "login",
+      "storeResults": ["CONFIRMED"],
+      "expected": {"outcome": "CHALLENGE_CREATED", "generatorCalls": 1, "storeCalls": 1, "challengePresentAfter": true, "challengeIdIndex": 0}
+    },
+    {
+      "id": "V-CREATE-002-browser-origin-success",
+      "site": "ACTIVE",
+      "caller": "PUBLIC_BROWSER",
+      "origin": "https://app.example.com:443",
+      "action": "login",
+      "storeResults": ["CONFIRMED"],
+      "expected": {"outcome": "CHALLENGE_CREATED", "generatorCalls": 1, "storeCalls": 1, "challengePresentAfter": true, "challengeIdIndex": 0}
+    },
+    {
+      "id": "V-CREATE-003-unknown-site",
+      "site": "UNKNOWN",
+      "caller": "TRUSTED_BACKEND",
+      "action": "login",
+      "storeResults": [],
+      "expected": {"outcome": "CALLER_UNAUTHORIZED", "generatorCalls": 0, "storeCalls": 0, "challengePresentAfter": false}
+    },
+    {
+      "id": "V-CREATE-004-disabled-site",
+      "site": "DISABLED",
+      "caller": "TRUSTED_BACKEND",
+      "action": "login",
+      "storeResults": [],
+      "expected": {"outcome": "CALLER_UNAUTHORIZED", "generatorCalls": 0, "storeCalls": 0, "challengePresentAfter": false}
+    },
+    {
+      "id": "V-CREATE-005-action-not-allowed",
+      "site": "ACTIVE",
+      "caller": "TRUSTED_BACKEND",
+      "action": "register",
+      "storeResults": [],
+      "expected": {"outcome": "CALLER_UNAUTHORIZED", "generatorCalls": 0, "storeCalls": 0, "challengePresentAfter": false}
+    },
+    {
+      "id": "V-CREATE-006-origin-not-allowed",
+      "site": "ACTIVE",
+      "caller": "PUBLIC_BROWSER",
+      "origin": "https://other.example.com",
+      "action": "login",
+      "storeResults": [],
+      "expected": {"outcome": "ORIGIN_NOT_ALLOWED", "generatorCalls": 0, "storeCalls": 0, "challengePresentAfter": false}
+    },
+    {
+      "id": "V-CREATE-007-store-failed",
+      "site": "ACTIVE",
+      "caller": "TRUSTED_BACKEND",
+      "action": "login",
+      "storeResults": ["FAILED"],
+      "expected": {"outcome": "DEPENDENCY_UNAVAILABLE", "generatorCalls": 1, "storeCalls": 1, "challengePresentAfter": false}
+    },
+    {
+      "id": "V-CREATE-008-store-result-unknown",
+      "site": "ACTIVE",
+      "caller": "TRUSTED_BACKEND",
+      "action": "login",
+      "storeResults": ["UNKNOWN", "CONFIRMED"],
+      "expected": {"outcome": "DEPENDENCY_UNAVAILABLE", "generatorCalls": 1, "storeCalls": 1, "challengePresentAfter": false}
+    },
+    {
+      "id": "V-CREATE-009-collision-then-success",
+      "site": "ACTIVE",
+      "caller": "TRUSTED_BACKEND",
+      "action": "login",
+      "storeResults": ["ALREADY_EXISTS", "CONFIRMED"],
+      "expected": {"outcome": "CHALLENGE_CREATED", "generatorCalls": 2, "storeCalls": 2, "challengePresentAfter": true, "challengeIdIndex": 1}
+    },
+    {
+      "id": "V-CREATE-010-collision-exhausted",
+      "site": "ACTIVE",
+      "caller": "TRUSTED_BACKEND",
+      "action": "login",
+      "storeResults": ["ALREADY_EXISTS", "ALREADY_EXISTS", "ALREADY_EXISTS", "CONFIRMED"],
+      "expected": {"outcome": "DEPENDENCY_UNAVAILABLE", "generatorCalls": 3, "storeCalls": 3, "challengePresentAfter": false}
+    },
+    {
+      "id": "V-CREATE-011-generator-failed",
+      "site": "ACTIVE",
+      "caller": "TRUSTED_BACKEND",
+      "action": "login",
+      "generator": "FAILED",
+      "storeResults": ["CONFIRMED"],
+      "expected": {"outcome": "DEPENDENCY_UNAVAILABLE", "generatorCalls": 1, "storeCalls": 0, "challengePresentAfter": false}
+    }
+  ]
+}

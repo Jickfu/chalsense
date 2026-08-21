@@ -1,0 +1,128 @@
+{
+  "vectorSet": "chalsense-coordinates-v1",
+  "status": "approved-stage-0",
+  "approvedByDecision": "D-014",
+  "frozenAt": "2026-08-22",
+  "sourceDraftSha256": "8c643168589813e21fbb6375a088b491c3256f28ae7cd467457a65e997a3ccfa",
+  "coordinateScale": 1000000,
+  "rounding": "nearest; ties away from zero",
+  "vectors": [
+    {
+      "id": "C-SOURCE-001-target-x",
+      "operation": "sourceToNormalizedX",
+      "input": {"sourceX": 380, "sourceWidth": 640},
+      "expected": 593750
+    },
+    {
+      "id": "C-SOURCE-002-piece-width",
+      "operation": "sourceWidthToNormalized",
+      "input": {"objectWidth": 100, "sourceWidth": 640},
+      "expected": 156250
+    },
+    {
+      "id": "C-SOURCE-003-half-up-positive",
+      "operation": "rationalToInteger",
+      "input": {"numerator": 3, "denominator": 2},
+      "expected": 2
+    },
+    {
+      "id": "C-SOURCE-004-half-away-negative",
+      "operation": "rationalToInteger",
+      "input": {"numerator": -3, "denominator": 2},
+      "expected": -2
+    },
+    {
+      "id": "C-SOURCE-005-y-repeating-fraction",
+      "operation": "sourceToNormalizedY",
+      "input": {"sourceY": 140, "sourceHeight": 360},
+      "expected": 388889
+    },
+    {
+      "id": "C-POINTER-001-arbitrary-grab-point",
+      "operation": "pointerDeltaToTrack",
+      "input": {
+        "rect": {"left": 10, "top": 20, "width": 320, "height": 180},
+        "start": {"clientX": 30, "clientY": 90},
+        "end": {"clientX": 200, "clientY": 90}
+      },
+      "expected": {"x": 531250, "y": 0}
+    },
+    {
+      "id": "C-POINTER-002-non-integer-css-width",
+      "operation": "pointerDeltaToTrack",
+      "input": {
+        "rect": {"left": 0, "top": 0, "width": 333.3, "height": 187.48125},
+        "start": {"clientX": 11.1, "clientY": 20},
+        "end": {"clientX": 122.2, "clientY": 20}
+      },
+      "expected": {"x": 333333, "y": 0},
+      "note": "browser implementation compares within the documented floating input fixture tolerance before integer rounding"
+    },
+    {
+      "id": "C-PIECE-001-normal-position",
+      "operation": "piecePosition",
+      "input": {"pieceStartX": 62500, "trackX": 531250, "pieceWidth": 156250},
+      "expected": 593750
+    },
+    {
+      "id": "C-PIECE-002-clamp-left",
+      "operation": "piecePosition",
+      "input": {"pieceStartX": 62500, "trackX": -100000, "pieceWidth": 156250},
+      "expected": 0
+    },
+    {
+      "id": "C-PIECE-003-clamp-right",
+      "operation": "piecePosition",
+      "input": {"pieceStartX": 62500, "trackX": 900000, "pieceWidth": 156250},
+      "expected": 843750
+    },
+    {
+      "id": "C-TOLERANCE-001-fixture",
+      "operation": "toleranceDraft1",
+      "input": {"pieceWidth": 156250, "ratioNumerator": 8, "ratioDenominator": 100, "min": 6250, "max": 18750},
+      "expected": 12500
+    },
+    {
+      "id": "C-TOLERANCE-002-min-clamp",
+      "operation": "toleranceDraft1",
+      "input": {"pieceWidth": 50000, "ratioNumerator": 8, "ratioDenominator": 100, "min": 6250, "max": 18750},
+      "expected": 6250
+    },
+    {
+      "id": "C-TOLERANCE-003-max-clamp",
+      "operation": "toleranceDraft1",
+      "input": {"pieceWidth": 300000, "ratioNumerator": 8, "ratioDenominator": 100, "min": 6250, "max": 18750},
+      "expected": 18750
+    },
+    {
+      "id": "C-ANSWER-001-lower-inclusive",
+      "operation": "positionAccepted",
+      "input": {"finalPieceX": 581250, "pieceTargetX": 593750, "tolerance": 12500},
+      "expected": true
+    },
+    {
+      "id": "C-ANSWER-002-upper-inclusive",
+      "operation": "positionAccepted",
+      "input": {"finalPieceX": 606250, "pieceTargetX": 593750, "tolerance": 12500},
+      "expected": true
+    },
+    {
+      "id": "C-ANSWER-003-outside-by-one",
+      "operation": "positionAccepted",
+      "input": {"finalPieceX": 606251, "pieceTargetX": 593750, "tolerance": 12500},
+      "expected": false
+    },
+    {
+      "id": "C-DPR-001-backing-store",
+      "operation": "backingStoreSize",
+      "input": {"cssWidth": 333.3, "cssHeight": 187.48125, "devicePixelRatio": 1.25, "maxDpr": 3},
+      "expected": {"backingWidth": 417, "backingHeight": 234}
+    },
+    {
+      "id": "C-DPR-002-clamp",
+      "operation": "backingStoreSize",
+      "input": {"cssWidth": 320, "cssHeight": 180, "devicePixelRatio": 4, "maxDpr": 3},
+      "expected": {"backingWidth": 960, "backingHeight": 540}
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "vectorSet": "chalsense-state-json-v1",
+  "status": "approved-v0.1",
+  "approvedByDecisions": ["D-017", "D-027"],
+  "frozenAt": "2026-08-22",
+  "sourceDraftSha256": "8af527c5be54044c58608a5781c9f9b7ab9b3bd95f94dd5350648ed643947125",
+  "storageVersion": 1,
+  "encoding": "UTF-8",
+  "maximumEncodedBytes": 16384,
+  "fixtures": {
+    "challenge": {
+      "storageVersion": 1,
+      "protocolVersion": "1",
+      "challengeType": "SLIDER_PUZZLE",
+      "siteKey": "site_demo_01",
+      "action": "login",
+      "contextDigest": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "issuedAt": 1787356800000,
+      "expiresAt": 1787356920000,
+      "geometry": {
+        "pieceStartX": 62500,
+        "pieceTargetX": 593750,
+        "pieceStartY": 388889,
+        "pieceWidth": 156250,
+        "pieceHeight": 277778,
+        "tolerance": 12500
+      },
+      "policyVersion": "slider-draft-1"
+    },
+    "ticket": {
+      "storageVersion": 1,
+      "protocolVersion": "1",
+      "siteKey": "site_demo_01",
+      "action": "login",
+      "contextDigest": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "challengeType": "SLIDER_PUZZLE",
+      "policyVersion": "slider-draft-1",
+      "verifiedAt": 1787356801000,
+      "issuedAt": 1787356801000,
+      "expiresAt": 1787356861000
+    }
+  },
+  "goldenVectors": [
+    {
+      "id": "V-STATE-JSON-001-challenge-canonical",
+      "kind": "challenge",
+      "fixtureRef": "challenge",
+      "canonicalJson": "{\"storageVersion\":1,\"kind\":\"challenge\",\"protocolVersion\":\"1\",\"payload\":{\"challengeType\":\"SLIDER_PUZZLE\",\"siteKey\":\"site_demo_01\",\"action\":\"login\",\"contextDigest\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"issuedAt\":1787356800000,\"expiresAt\":1787356920000,\"geometry\":{\"pieceStartX\":62500,\"pieceTargetX\":593750,\"pieceStartY\":388889,\"pieceWidth\":156250,\"pieceHeight\":277778,\"tolerance\":12500},\"policyVersion\":\"slider-draft-1\"}}"
+    },
+    {
+      "id": "V-STATE-JSON-002-ticket-canonical",
+      "kind": "ticket",
+      "fixtureRef": "ticket",
+      "canonicalJson": "{\"storageVersion\":1,\"kind\":\"ticket\",\"protocolVersion\":\"1\",\"payload\":{\"siteKey\":\"site_demo_01\",\"action\":\"login\",\"contextDigest\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"challengeType\":\"SLIDER_PUZZLE\",\"policyVersion\":\"slider-draft-1\",\"verifiedAt\":1787356801000,\"issuedAt\":1787356801000,\"expiresAt\":1787356861000}}"
+    }
+  ],
+  "readVectors": [
+    {
+      "id": "V-STATE-JSON-003-reader-order-independent",
+      "kind": "ticket",
+      "json": "{\"payload\":{\"expiresAt\":1787356861000,\"issuedAt\":1787356801000,\"verifiedAt\":1787356801000,\"policyVersion\":\"slider-draft-1\",\"challengeType\":\"SLIDER_PUZZLE\",\"contextDigest\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"action\":\"login\",\"siteKey\":\"site_demo_01\"},\"protocolVersion\":\"1\",\"kind\":\"ticket\",\"storageVersion\":1}",
+      "expected": "ACCEPT"
+    },
+    {
+      "id": "V-STATE-JSON-004-duplicate-field",
+      "kind": "challenge",
+      "json": "{\"storageVersion\":1,\"storageVersion\":1,\"kind\":\"challenge\",\"protocolVersion\":\"1\",\"payload\":{}}",
+      "expected": "REJECT"
+    },
+    {
+      "id": "V-STATE-JSON-005-unknown-field",
+      "kind": "challenge",
+      "json": "{\"storageVersion\":1,\"kind\":\"challenge\",\"protocolVersion\":\"1\",\"payload\":{},\"extra\":false}",
+      "expected": "REJECT"
+    },
+    {
+      "id": "V-STATE-JSON-006-unsupported-storage-version",
+      "kind": "challenge",
+      "json": "{\"storageVersion\":2,\"kind\":\"challenge\",\"protocolVersion\":\"1\",\"payload\":{}}",
+      "expected": "REJECT"
+    },
+    {
+      "id": "V-STATE-JSON-007-kind-mismatch",
+      "kind": "challenge",
+      "json": "{\"storageVersion\":1,\"kind\":\"ticket\",\"protocolVersion\":\"1\",\"payload\":{}}",
+      "expected": "REJECT"
+    },
+    {
+      "id": "V-STATE-JSON-008-fractional-number",
+      "kind": "challenge",
+      "json": "{\"storageVersion\":1.0,\"kind\":\"challenge\",\"protocolVersion\":\"1\",\"payload\":{}}",
+      "expected": "REJECT"
+    },
+    {
+      "id": "V-STATE-JSON-009-exponent-number",
+      "kind": "challenge",
+      "json": "{\"storageVersion\":1e0,\"kind\":\"challenge\",\"protocolVersion\":\"1\",\"payload\":{}}",
+      "expected": "REJECT"
+    },
+    {
+      "id": "V-STATE-JSON-010-unsafe-integer",
+      "kind": "challenge",
+      "json": "{\"storageVersion\":9007199254740992,\"kind\":\"challenge\",\"protocolVersion\":\"1\",\"payload\":{}}",
+      "expected": "REJECT"
+    },
+    {
+      "id": "V-STATE-JSON-011-missing-field",
+      "kind": "challenge",
+      "json": "{\"storageVersion\":1,\"kind\":\"challenge\",\"payload\":{}}",
+      "expected": "REJECT"
+    },
+    {
+      "id": "V-STATE-JSON-012-non-ascii-number",
+      "kind": "challenge",
+      "json": "{\"storageVersion\":١,\"kind\":\"challenge\",\"protocolVersion\":\"1\",\"payload\":{}}",
+      "expected": "REJECT"
+    }
+  ]
+}

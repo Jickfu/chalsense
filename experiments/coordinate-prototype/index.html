@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>ChalSense 坐标确定性原型</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">D-014 · STAGE 0 EXPERIMENT</p>
+      <h1>坐标确定性原型</h1>
+      <p class="lede">验证 CSS 缩放、DPR、任意抓取点与整数规范化坐标。此页面不判断操作者是否为真人。</p>
+    </header>
+
+    <section class="panel controls" aria-labelledby="controls-title">
+      <h2 id="controls-title">显示参数</h2>
+      <label>CSS 宽度
+        <select id="css-width">
+          <option value="240">240 px</option>
+          <option value="320" selected>320 px</option>
+          <option value="333.3">333.3 px</option>
+          <option value="480">480 px</option>
+        </select>
+      </label>
+      <label>模拟 DPR
+        <select id="dpr">
+          <option value="actual">浏览器实际值</option>
+          <option value="1">1</option>
+          <option value="1.25">1.25</option>
+          <option value="1.5">1.5</option>
+          <option value="2" selected>2</option>
+          <option value="3">3</option>
+          <option value="4">4（应 clamp 为 3）</option>
+        </select>
+      </label>
+      <button id="reset" type="button">重置挑战</button>
+      <button id="run-matrix" type="button">运行 60 项矩阵</button>
+    </section>
+
+    <section class="workspace" aria-label="交互验证区">
+      <div class="canvas-column">
+        <div id="canvas-shell" class="canvas-shell">
+          <canvas id="challenge" width="640" height="360" tabindex="0" aria-label="滑块拼图坐标测试画布"></canvas>
+        </div>
+        <p class="hint">从蓝色拼图片的任意内部位置拖到虚线目标。拖动中改变宽度会取消本次操作。</p>
+      </div>
+
+      <aside class="panel telemetry" aria-live="polite">
+        <h2>实时结果</h2>
+        <dl>
+          <div><dt>状态</dt><dd id="status">等待拖动</dd></div>
+          <div><dt>内容矩形</dt><dd id="rect">—</dd></div>
+          <div><dt>backing store</dt><dd id="backing">—</dd></div>
+          <div><dt>最终位置 N</dt><dd id="final-x">62500</dd></div>
+          <div><dt>目标位置 N</dt><dd>593750</dd></div>
+          <div><dt>误差 N</dt><dd id="error">531250</dd></div>
+          <div><dt>容差 N</dt><dd id="tolerance">12500</dd></div>
+          <div><dt>轨迹点</dt><dd id="points">0</dd></div>
+        </dl>
+        <div id="result" class="result neutral">尚未提交</div>
+      </aside>
+    </section>
+
+    <section class="panel notes">
+      <h2>安全边界</h2>
+      <ul>
+        <li>客户端坐标、轨迹、时间戳和此页面的成功结果均不可信。</li>
+        <li>DPR 只改变 Canvas backing store，不进入提交协议。</li>
+        <li>当前容差只用于原型，真实用户与攻击校准留到 v0.1 发布前。</li>
+      </ul>
+      <pre id="matrix-output">矩阵尚未运行。</pre>
+    </section>
+  </main>
+  <script type="module" src="./prototype.mjs"></script>
+</body>
+</html>

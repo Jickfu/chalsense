@@ -1,0 +1,339 @@
+{
+  "vectorSet": "chalsense-protocol-v1",
+  "status": "approved-v0.1",
+  "approvedByDecisions": ["D-013", "D-021", "D-022"],
+  "frozenAt": "2026-08-22",
+  "sourceDraftSha256": "54bc2d19d888e972a549ba279e9d4978a622275002a3637865a58d65f29a4269",
+  "protocolVersion": "1",
+  "coordinateScale": 1000000,
+  "semantics": {
+    "expiresWhen": "now >= expiresAt",
+    "answerAcceptedWhen": "abs(finalPieceX - pieceTargetX) <= tolerance",
+    "take": "atomic read-and-delete; state is never restored",
+    "unknownStoreResult": "fail closed; caller abandons the credential"
+  },
+  "fixtures": {
+    "challenge": {
+      "challengeId": "AAAAAAAAAAAAAAAAAAAAAA",
+      "state": {
+        "storageVersion": 1,
+        "protocolVersion": "1",
+        "challengeType": "SLIDER_PUZZLE",
+        "siteKey": "site_demo_01",
+        "action": "login",
+        "contextDigest": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "issuedAt": 1787356800000,
+        "expiresAt": 1787356920000,
+        "geometry": {
+          "pieceStartX": 62500,
+          "pieceTargetX": 593750,
+          "pieceStartY": 388889,
+          "pieceWidth": 156250,
+          "pieceHeight": 277778,
+          "tolerance": 12500
+        },
+        "policyVersion": "slider-draft-1"
+      }
+    },
+    "validTrack": [
+      {"x": 0, "y": 0, "t": 0, "event": "START"},
+      {"x": 210000, "y": 5556, "t": 120, "event": "MOVE"},
+      {"x": 531250, "y": 0, "t": 420, "event": "END"}
+    ],
+    "ticket": {
+      "verificationTicket": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "lookupDigestHex": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925",
+      "state": {
+        "storageVersion": 1,
+        "protocolVersion": "1",
+        "siteKey": "site_demo_01",
+        "action": "login",
+        "contextDigest": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "challengeType": "SLIDER_PUZZLE",
+        "policyVersion": "slider-draft-1",
+        "verifiedAt": 1787356801000,
+        "issuedAt": 1787356801000,
+        "expiresAt": 1787356861000
+      }
+    }
+  },
+  "verifyVectors": [
+    {
+      "id": "V-VERIFY-001-success",
+      "now": 1787356801000,
+      "stateStore": "PRESENT",
+      "request": {
+        "protocolVersion": "1",
+        "siteKey": "site_demo_01",
+        "challengeId": "AAAAAAAAAAAAAAAAAAAAAA",
+        "solution": {"finalPieceX": 593750, "trackRef": "validTrack"}
+      },
+      "expected": {"outcome": "TICKET_ISSUED", "challengePresentAfter": false}
+    },
+    {
+      "id": "V-VERIFY-002-tolerance-lower-inclusive",
+      "now": 1787356801000,
+      "stateStore": "PRESENT",
+      "request": {
+        "protocolVersion": "1",
+        "siteKey": "site_demo_01",
+        "challengeId": "AAAAAAAAAAAAAAAAAAAAAA",
+        "solution": {"finalPieceX": 581250, "trackFinalX": 518750, "trackRef": "validTrack-with-final-x-518750"}
+      },
+      "expected": {"outcome": "TICKET_ISSUED", "challengePresentAfter": false}
+    },
+    {
+      "id": "V-VERIFY-003-tolerance-upper-inclusive",
+      "now": 1787356801000,
+      "stateStore": "PRESENT",
+      "request": {
+        "protocolVersion": "1",
+        "siteKey": "site_demo_01",
+        "challengeId": "AAAAAAAAAAAAAAAAAAAAAA",
+        "solution": {"finalPieceX": 606250, "trackFinalX": 543750, "trackRef": "validTrack-with-final-x-543750"}
+      },
+      "expected": {"outcome": "TICKET_ISSUED", "challengePresentAfter": false}
+    },
+    {
+      "id": "V-VERIFY-004-outside-tolerance",
+      "now": 1787356801000,
+      "stateStore": "PRESENT",
+      "request": {
+        "protocolVersion": "1",
+        "siteKey": "site_demo_01",
+        "challengeId": "AAAAAAAAAAAAAAAAAAAAAA",
+        "solution": {"finalPieceX": 606251, "trackFinalX": 543751, "trackRef": "validTrack-with-final-x-543751"}
+      },
+      "expected": {"outcome": "VERIFICATION_FAILED", "challengePresentAfter": false}
+    },
+    {
+      "id": "V-VERIFY-005-expired-at-boundary",
+      "now": 1787356920000,
+      "stateStore": "PRESENT",
+      "request": {
+        "protocolVersion": "1",
+        "siteKey": "site_demo_01",
+        "challengeId": "AAAAAAAAAAAAAAAAAAAAAA",
+        "solution": {"finalPieceX": 593750, "trackRef": "validTrack"}
+      },
+      "expected": {"outcome": "CHALLENGE_UNAVAILABLE", "internalReason": "EXPIRED", "challengePresentAfter": false}
+    },
+    {
+      "id": "V-VERIFY-006-malformed-track-consumes",
+      "now": 1787356801000,
+      "stateStore": "PRESENT",
+      "request": {
+        "protocolVersion": "1",
+        "siteKey": "site_demo_01",
+        "challengeId": "AAAAAAAAAAAAAAAAAAAAAA",
+        "solution": {
+          "finalPieceX": 593750,
+          "track": [
+            {"x": 1, "y": 0, "t": 0, "event": "START"},
+            {"x": 531250, "y": 0, "t": 420, "event": "END"}
+          ]
+        }
+      },
+      "expected": {"outcome": "VERIFICATION_FAILED", "internalReason": "TRACK_STRUCTURE", "challengePresentAfter": false}
+    },
+    {
+      "id": "V-VERIFY-007-replay-or-missing",
+      "now": 1787356801001,
+      "stateStore": "ABSENT",
+      "request": {
+        "protocolVersion": "1",
+        "siteKey": "site_demo_01",
+        "challengeId": "AAAAAAAAAAAAAAAAAAAAAA",
+        "solution": {"finalPieceX": 593750, "trackRef": "validTrack"}
+      },
+      "expected": {"outcome": "CHALLENGE_UNAVAILABLE", "challengePresentAfter": false}
+    },
+    {
+      "id": "V-VERIFY-008-store-result-unknown",
+      "now": 1787356801000,
+      "stateStore": "TAKE_RESULT_UNKNOWN",
+      "request": {
+        "protocolVersion": "1",
+        "siteKey": "site_demo_01",
+        "challengeId": "AAAAAAAAAAAAAAAAAAAAAA",
+        "solution": {"finalPieceX": 593750, "trackRef": "validTrack"}
+      },
+      "expected": {"outcome": "DEPENDENCY_UNAVAILABLE", "callerMustAbandonCredential": true, "challengePresentAfter": "UNKNOWN"}
+    },
+    {
+      "id": "V-VERIFY-009-ticket-write-fails",
+      "now": 1787356801000,
+      "stateStore": "PRESENT_THEN_TICKET_WRITE_FAILED",
+      "request": {
+        "protocolVersion": "1",
+        "siteKey": "site_demo_01",
+        "challengeId": "AAAAAAAAAAAAAAAAAAAAAA",
+        "solution": {"finalPieceX": 593750, "trackRef": "validTrack"}
+      },
+      "expected": {"outcome": "DEPENDENCY_UNAVAILABLE", "challengePresentAfter": false, "ticketReturned": false}
+    },
+    {
+      "id": "V-VERIFY-010-store-fails-before-take",
+      "now": 1787356801000,
+      "stateStore": "TAKE_FAILED",
+      "request": {
+        "protocolVersion": "1",
+        "siteKey": "site_demo_01",
+        "challengeId": "AAAAAAAAAAAAAAAAAAAAAA",
+        "solution": {"finalPieceX": 593750, "trackRef": "validTrack"}
+      },
+      "expected": {"outcome": "DEPENDENCY_UNAVAILABLE", "callerMustAbandonCredential": true, "challengePresentAfter": true}
+    },
+    {
+      "id": "V-VERIFY-011-ticket-write-result-unknown",
+      "now": 1787356801000,
+      "stateStore": "PRESENT_THEN_TICKET_WRITE_UNKNOWN",
+      "request": {
+        "protocolVersion": "1",
+        "siteKey": "site_demo_01",
+        "challengeId": "AAAAAAAAAAAAAAAAAAAAAA",
+        "solution": {"finalPieceX": 593750, "trackRef": "validTrack"}
+      },
+      "expected": {"outcome": "DEPENDENCY_UNAVAILABLE", "callerMustAbandonCredential": true, "challengePresentAfter": false, "ticketReturned": false}
+    }
+  ],
+  "consumeVectors": [
+    {
+      "id": "V-CONSUME-001-success",
+      "now": 1787356802000,
+      "stateStore": "PRESENT",
+      "request": {
+        "protocolVersion": "1",
+        "verificationTicket": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "siteKey": "site_demo_01",
+        "action": "login",
+        "contextDigest": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      },
+      "expected": {"outcome": "CONSUMED", "ticketPresentAfter": false}
+    },
+    {
+      "id": "V-CONSUME-002-action-mismatch-burns",
+      "now": 1787356802000,
+      "stateStore": "PRESENT",
+      "request": {
+        "protocolVersion": "1",
+        "verificationTicket": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "siteKey": "site_demo_01",
+        "action": "password-reset",
+        "contextDigest": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      },
+      "expected": {"outcome": "TICKET_INVALID", "internalReason": "ACTION_MISMATCH", "ticketPresentAfter": false}
+    },
+    {
+      "id": "V-CONSUME-003-context-mismatch-burns",
+      "now": 1787356802000,
+      "stateStore": "PRESENT",
+      "request": {
+        "protocolVersion": "1",
+        "verificationTicket": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "siteKey": "site_demo_01",
+        "action": "login",
+        "contextDigest": "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      },
+      "expected": {"outcome": "TICKET_INVALID", "internalReason": "CONTEXT_MISMATCH", "ticketPresentAfter": false}
+    },
+    {
+      "id": "V-CONSUME-004-expired-at-boundary",
+      "now": 1787356861000,
+      "stateStore": "PRESENT",
+      "request": {
+        "protocolVersion": "1",
+        "verificationTicket": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "siteKey": "site_demo_01",
+        "action": "login",
+        "contextDigest": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      },
+      "expected": {"outcome": "TICKET_UNAVAILABLE", "internalReason": "EXPIRED", "ticketPresentAfter": false}
+    },
+    {
+      "id": "V-CONSUME-005-replay-or-missing",
+      "now": 1787356802001,
+      "stateStore": "ABSENT",
+      "request": {
+        "protocolVersion": "1",
+        "verificationTicket": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "siteKey": "site_demo_01",
+        "action": "login",
+        "contextDigest": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      },
+      "expected": {"outcome": "TICKET_UNAVAILABLE", "ticketPresentAfter": false}
+    },
+    {
+      "id": "V-CONSUME-006-store-result-unknown",
+      "now": 1787356802000,
+      "stateStore": "TAKE_RESULT_UNKNOWN",
+      "request": {
+        "protocolVersion": "1",
+        "verificationTicket": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "siteKey": "site_demo_01",
+        "action": "login",
+        "contextDigest": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      },
+      "expected": {"outcome": "DEPENDENCY_UNAVAILABLE", "callerMustAbandonCredential": true, "ticketPresentAfter": "UNKNOWN"}
+    },
+    {
+      "id": "V-CONSUME-007-store-fails-before-take",
+      "now": 1787356802000,
+      "stateStore": "TAKE_FAILED",
+      "request": {
+        "protocolVersion": "1",
+        "verificationTicket": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "siteKey": "site_demo_01",
+        "action": "login",
+        "contextDigest": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      },
+      "expected": {"outcome": "DEPENDENCY_UNAVAILABLE", "callerMustAbandonCredential": true, "ticketPresentAfter": true}
+    }
+  ],
+  "concurrencyVectors": [
+    {
+      "id": "V-CONCURRENCY-001-verify-two-callers",
+      "initialState": "ONE_ACTIVE_CHALLENGE",
+      "operations": ["verify-valid-A", "verify-valid-B"],
+      "schedule": "start simultaneously; store linearizes atomic take",
+      "expected": {
+        "takeSuccessCount": 1,
+        "ticketIssuedCount": 1,
+        "outcomes": {"TICKET_ISSUED": 1, "CHALLENGE_UNAVAILABLE": 1}
+      }
+    },
+    {
+      "id": "V-CONCURRENCY-002-consume-two-callers",
+      "initialState": "ONE_ACTIVE_TICKET",
+      "operations": ["consume-valid-A", "consume-valid-B"],
+      "schedule": "start simultaneously; store linearizes atomic take",
+      "expected": {
+        "takeSuccessCount": 1,
+        "consumedCount": 1,
+        "outcomes": {"CONSUMED": 1, "TICKET_UNAVAILABLE": 1}
+      }
+    }
+  ],
+  "parserVectors": [
+    {
+      "id": "V-PARSER-001-duplicate-challenge-id",
+      "rawJson": "{\"protocolVersion\":\"1\",\"siteKey\":\"site_demo_01\",\"challengeId\":\"AAAAAAAAAAAAAAAAAAAAAA\",\"challengeId\":\"AQAAAAAAAAAAAAAAAAAAAA\",\"solution\":{}}",
+      "expected": {"outcome": "INVALID_REQUEST", "stateMutation": false}
+    },
+    {
+      "id": "V-PARSER-002-fractional-coordinate",
+      "rawJson": "{\"protocolVersion\":\"1\",\"siteKey\":\"site_demo_01\",\"challengeId\":\"AAAAAAAAAAAAAAAAAAAAAA\",\"solution\":{\"finalPieceX\":593750.0,\"track\":[]}}",
+      "expected": {"outcome": "INVALID_REQUEST", "stateMutation": "implementation must reject before take when numeric token class is preserved"}
+    },
+    {
+      "id": "V-PARSER-003-unknown-request-field",
+      "rawJson": "{\"protocolVersion\":\"1\",\"siteKey\":\"site_demo_01\",\"challengeId\":\"AAAAAAAAAAAAAAAAAAAAAA\",\"solution\":{},\"debug\":true}",
+      "expected": {"outcome": "INVALID_REQUEST", "stateMutation": false}
+    },
+    {
+      "id": "V-PARSER-004-padded-base64url",
+      "rawJson": "{\"protocolVersion\":\"1\",\"siteKey\":\"site_demo_01\",\"challengeId\":\"AAAAAAAAAAAAAAAAAAAAAA==\",\"solution\":{}}",
+      "expected": {"outcome": "INVALID_REQUEST", "stateMutation": false}
+    }
+  ]
+}
