@@ -13,7 +13,7 @@
 
 ## 基础镜像与许可证
 
-构建和运行阶段使用 Docker Official Image `eclipse-temurin`。该镜像由 Adoptium 维护；OpenJDK 使用 GPL-2.0 with Classpath Exception，镜像 Dockerfile/脚本使用 Apache-2.0，基础发行版还包含各自许可证的软件。官方说明和当前标签以 [Eclipse Temurin Docker Official Image](https://hub.docker.com/_/eclipse-temurin/) 为准。
+构建和运行阶段使用 Docker Official Image `eclipse-temurin`。该镜像由 Adoptium 维护；OpenJDK 使用 GPL-2.0 with Classpath Exception，镜像 Dockerfile/脚本使用 Apache-2.0，基础发行版还包含各自许可证的软件。构建阶段额外安装 Ubuntu `unzip`，使 Maven Wrapper 下载 `.zip` 并执行仓库固定的 SHA-256 校验；它不进入最终运行镜像。官方说明和当前标签以 [Eclipse Temurin Docker Official Image](https://hub.docker.com/_/eclipse-temurin/) 为准。
 
 选择完整 patch tag 而不是浮动 `21`，让评审可以还原构建输入；它仍不是内容摘要固定。正式发布流程还需要多架构 build、digest/SBOM、漏洞扫描、签名和 provenance，当前本地镜像不得宣传为已完成供应链加固的正式发布物。
 

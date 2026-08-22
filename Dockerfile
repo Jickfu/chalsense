@@ -1,6 +1,9 @@
 # syntax=docker/dockerfile:1.7
 FROM eclipse-temurin:21.0.11_10-jdk-noble AS build
 WORKDIR /workspace
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends unzip \
+    && rm -rf /var/lib/apt/lists/*
 COPY . .
 RUN chmod +x mvnw \
     && ./mvnw --batch-mode --no-transfer-progress -pl chalsense-server -am -DskipTests package
