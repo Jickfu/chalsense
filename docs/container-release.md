@@ -6,7 +6,7 @@
 
 - **已批准决策**：镜像路径为 `ghcr.io/jickfu/chalsense-server`，替代 D-019 的未占用组织路径。
 - **事实**：`.github/workflows/release-container.yml` 的手动运行只构建并扫描，不登录 GHCR、不签名、不发布；只有 `vMAJOR.MINOR.PATCH` 标签运行且根 POM 为完全相同的非 SNAPSHOT 版本时才进入 publish job。
-- **事实**：发布前分别构建并扫描 `linux/amd64` 与 `linux/arm64`；存在已有修复版本的 `HIGH` 或 `CRITICAL` OS/library 漏洞时失败。
+- **事实**：发布前分别构建并扫描 `linux/amd64` 与 `linux/arm64`；架构无关的 Java JAR 在 runner 原生架构构建，最终 JRE 层按目标架构选择。存在已有修复版本的 `HIGH` 或 `CRITICAL` OS/library 漏洞时失败。
 - **事实**：发布构建生成多架构清单、BuildKit SPDX SBOM 与 max-mode provenance，并额外生成 CycloneDX JSON；镜像 digest 使用 GitHub OIDC 的 Sigstore keyless 签名，同时写入 GitHub build provenance 与 SBOM attestation。
 - **推论**：签名、provenance 和 SBOM 可以证明构件来自指定工作流并提高成分透明度，但不能证明代码无漏洞、运行环境可信或验证码能单独证明用户是真人。
 - **建议**：正式发布仍需人工检查版本说明、依赖许可证、基础镜像安全公告、Q-004 校准门禁和所有 CI；不能把“扫描无发现”表述为“无漏洞”。

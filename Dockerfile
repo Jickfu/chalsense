@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-FROM eclipse-temurin:21.0.11_10-jdk-noble AS build
+FROM --platform=$BUILDPLATFORM eclipse-temurin:21.0.11_10-jdk-noble AS build
 WORKDIR /workspace
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends unzip \
