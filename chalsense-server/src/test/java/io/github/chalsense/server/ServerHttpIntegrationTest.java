@@ -145,13 +145,13 @@ class ServerHttpIntegrationTest {
     }
 
     private static ConfigurableApplicationContext start(Map<String, Object> properties) {
-        return new SpringApplicationBuilder(ChalSenseServerApplication.class).properties(properties).run();
+        return new SpringApplicationBuilder(ChalSenseServerApplication.class).properties(properties)
+                .run("--server.port=0");
     }
 
     private static Map<String, Object> properties() throws Exception {
         byte[] digest = MessageDigest.getInstance("SHA-256").digest(Base64.getUrlDecoder().decode(SECRET));
         return Map.ofEntries(
-                Map.entry("server.port", "0"),
                 Map.entry("spring.main.banner-mode", "off"),
                 Map.entry("logging.level.root", "WARN"),
                 Map.entry("chalsense.redis-uri", redisUri),
