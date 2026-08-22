@@ -1,0 +1,55 @@
+services:
+  state:
+    image: redis:7.2.14
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]
+    restart: unless-stopped
+    volumes:
+      - state-data:/data
+    networks: [backend]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    security_opt: ["no-new-privileges:true"]
+
+  chalsense:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    image: chalsense-server:local
+    restart: unless-stopped
+    depends_on:
+      state:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:8080"
+    expose:
+      - "9090"
+    environment:
+      SERVER_ADDRESS: 0.0.0.0
+      CHALSENSE_REDIS_URI: redis://state:6379
+      CHALSENSE_RATE_LIMIT_HMAC_KEY: ${CHALSENSE_RATE_LIMIT_HMAC_KEY:?set in .env}
+      CHALSENSE_SERVICE_SECRET_SHA256: ${CHALSENSE_SERVICE_SECRET_SHA256:?set in .env}
+    volumes:
+      - ./application.yml:/opt/chalsense/config/application.yml:ro
+      - ${CHALSENSE_BACKGROUND_DIRECTORY:?set in .env}:/data/backgrounds:ro
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    networks: [backend]
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--output-document=-", "http://127.0.0.1:8080/livez"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+
+networks:
+  backend:
+    internal: true
+
+volumes:
+  state-data:

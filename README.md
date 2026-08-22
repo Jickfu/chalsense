@@ -34,10 +34,11 @@ ChalSense 是一个面向 JVM 与 Web 应用的自托管人机验证项目，目
 14. [公开限流与反向代理](docs/rate-limiting.md)：了解双桶、代理信任、网络标识隐私和失败策略。
 15. [可观测性、审计与健康](docs/observability.md)：了解低基数指标、隐私安全日志和管理端口边界。
 16. [容量测试与限额校准](docs/capacity-testing.md)：了解合成基准口径、隐私边界和生产校准门禁。
-17. [决策记录](docs/decisions/README.md)：区分已批准结论、工作假设和待决策事项。
-18. [技术决策依据](docs/remaining-decisions.md)：了解 D-013～D-018 的选型依据、取舍及 D-014 的条件边界。
-19. [路线图](docs/roadmap.md)：了解分期范围、完成标准和评估指标。
-20. [阶段 0 评审](docs/stage-0-review.md)：了解当前证据、阻塞项和是否允许开始实现。
+17. [OCI 镜像与 Compose 部署](docs/container-deployment.md)：了解非 root 镜像、最小拓扑、素材挂载和生产边界。
+18. [决策记录](docs/decisions/README.md)：区分已批准结论、工作假设和待决策事项。
+19. [技术决策依据](docs/remaining-decisions.md)：了解 D-013～D-018 的选型依据、取舍及 D-014 的条件边界。
+20. [路线图](docs/roadmap.md)：了解分期范围、完成标准和评估指标。
+21. [阶段 0 评审](docs/stage-0-review.md)：了解当前证据、阻塞项和是否允许开始实现。
 
 ## 当前阶段的完成标准
 
@@ -54,7 +55,7 @@ Java 根构件为 `io.github.chalsense:chalsense-parent:0.1.0-SNAPSHOT`，当前
 
 `chalsense-store-redis` 依 D-028～D-030、D-034～D-035 使用 Jedis 7.5.3 和池化 `RedisClient`，实现 Redis OSS 7.2.x 与 Valkey 7.2.x standalone 的状态原子消费、短时资源和公开双桶限流。状态与限流结果未知均失败关闭，不回退内存；可能自动重放命令的 `RedisClusterClient` 已延期。
 
-`@chalsense/widget` 依 D-032 实现原生 `<chalsense-widget>`、Canvas/Pointer Events、键盘控制、双语文案、替代验证事件和可注入 transport；D-034 增加官方 `createHttpTransport`。`chalsense-server` 固定 Spring Boot 4.1.1，提供 public/trusted 分离端点、静态站点与 credential 配置、精确 CORS、请求上限、Redis 短时资源、D-035 公开限流，以及 D-036 低基数指标、结构化审计和独立 loopback Prometheus 端口。成功事件仍只表示取得 ticket；生产部署边界见 [Server 说明](chalsense-server/README.md)。
+`@chalsense/widget` 依 D-032 实现原生 `<chalsense-widget>`、Canvas/Pointer Events、键盘控制、双语文案、替代验证事件和可注入 transport；D-034 增加官方 `createHttpTransport`。`chalsense-server` 固定 Spring Boot 4.1.1，提供 public/trusted 分离端点、静态站点与 credential 配置、精确 CORS、请求上限、Redis 短时资源、D-035 公开限流，以及 D-036 低基数指标、结构化审计和独立 loopback Prometheus 端口。D-038 增加可执行 JAR、非 root OCI 构建和 Redis/Valkey Compose 本地拓扑，但尚未发布正式镜像。成功事件仍只表示取得 ticket；生产部署边界见 [Server 说明](chalsense-server/README.md)。
 
 Windows：
 
@@ -75,4 +76,4 @@ npm ci
 npm run verify:widget
 ```
 
-Maven Wrapper 固定 Maven 3.9.16，并校验官方分发包的 SHA-256。普通 Maven 构建执行 Java 与 Server 边界测试；Widget 使用 npm lockfile、TypeScript、Vitest 与 Playwright。CI 另在 Java 17/21 上对 Redis 7.2.14 与 Valkey 7.2.14 执行同一组 Store 集成测试，并在 Node.js 24/Chromium 上验证 Widget。官网、Starter、容器发布和动态管理能力尚不在当前实现范围内。
+Maven Wrapper 固定 Maven 3.9.16，并校验官方分发包的 SHA-256。普通 Maven 构建执行 Java 与 Server 边界测试；Widget 使用 npm lockfile、TypeScript、Vitest 与 Playwright。CI 另在 Java 17/21 上对 Redis 7.2.14 与 Valkey 7.2.14 执行同一组 Store 集成测试，在 Node.js 24/Chromium 上验证 Widget，并真实启动只读、非 root OCI 镜像执行健康检查。官网、Starter、正式容器发布和动态管理能力尚不在当前实现范围内。

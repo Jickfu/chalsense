@@ -284,6 +284,16 @@
 - 结论：共享 runner 的单次结果不是 SLA，也不直接冻结默认限额或告警阈值。生产阈值必须在目标拓扑经稳定性、资源、故障和安全效果评估后另行批准。
 - 原因：先建立可重复、隐私最小化的回归口径，同时避免把易波动的合成数字误当作普适容量或安全承诺。
 
+### D-038 OCI 镜像与本地 Compose 基线
+
+- 日期：2026-08-22
+- 状态：已批准。
+- 结论：`chalsense-server` 生成 Java 17 字节码的可执行 Spring Boot JAR；OCI 使用固定 patch tag 的 Eclipse Temurin 21 JDK 构建阶段与 JRE 运行阶段。最终进程固定为非 root `10001:10001`，支持只读根文件系统、`/tmp` tmpfs、移除全部 Linux capabilities 和 `no-new-privileges`。
+- 结论：本地 Compose 默认只发布宿主 loopback 业务端口，Redis/Valkey 不发布端口，management 不发布到宿主；容器内非 loopback 监听必须同时启用 D-035 限流。背景素材只允许由部署方只读挂载，镜像不内置或下载生产素材。
+- 结论：当前只提供本地构建与 Redis/Valkey 运行基线，不发布正式 GHCR 镜像，也不承诺多架构、SBOM、签名、provenance、Kubernetes 或生产 secret 交付；这些属于正式发布门禁。
+- 依赖审查：没有新增 Maven/npm 依赖。基础镜像使用 Docker Official Image `eclipse-temurin`；OpenJDK 为 GPL-2.0 with Classpath Exception，镜像构建文件为 Apache-2.0，基础发行版组件仍需随升级审查。替代方案是 distroless、自建 jlink 或原生镜像，但会增加证书、诊断、兼容与维护成本。
+- 原因：先验证最小可部署形态和运行时最小权限，同时避免把开发 Compose、已知 demo secret 或未签名镜像误称为生产交付物。
+
 ## 工作假设
 
 ### A-002 生产存储

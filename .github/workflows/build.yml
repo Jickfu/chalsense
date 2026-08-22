@@ -12,6 +12,60 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  container:
+    name: OCI image / Java 21
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Build image
+        run: docker build --tag chalsense-server:test .
+
+      - name: Verify image metadata and hardened runtime
+        run: |
+          test "$(docker image inspect chalsense-server:test --format '{{.Config.User}}')" = "10001:10001"
+          test "$(docker image inspect chalsense-server:test --format '{{json .Config.Healthcheck.Test}}')" != "null"
+          mkdir -p .container-test/backgrounds
+          python3 - <<'PY'
+          import struct, zlib
+          width, height = 640, 360
+          raw = b''.join(b'\x00' + bytes((30, 70, 120)) * width for _ in range(height))
+          def chunk(kind, data):
+              return struct.pack('>I', len(data)) + kind + data + struct.pack('>I', zlib.crc32(kind + data) & 0xffffffff)
+          png = b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', width, height, 8, 2, 0, 0, 0)) + chunk(b'IDAT', zlib.compress(raw)) + chunk(b'IEND', b'')
+          open('.container-test/backgrounds/background.png', 'wb').write(png)
+          PY
+          docker network create chalsense-test
+          docker run --detach --name state --network chalsense-test redis:7.2.14
+          docker run --detach --name chalsense --network chalsense-test \
+            --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+            --cap-drop ALL --security-opt no-new-privileges:true \
+            --env SERVER_ADDRESS=0.0.0.0 \
+            --env CHALSENSE_REDIS_URI=redis://state:6379 \
+            --env CHALSENSE_RATE_LIMIT_HMAC_KEY=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA \
+            --env CHALSENSE_SERVICE_SECRET_SHA256=Zmh6rfhivXdsj8GLjp-OIAiXFIVu4jOzkCpZHQ1fKSU \
+            --volume "$PWD/deploy/compose/application.yml:/opt/chalsense/config/application.yml:ro" \
+            --volume "$PWD/.container-test/backgrounds:/data/backgrounds:ro" \
+            chalsense-server:test
+          for attempt in {1..30}; do
+            if test "$(docker inspect chalsense --format '{{.State.Health.Status}}')" = "healthy"; then
+              docker exec chalsense wget --quiet --output-document=- http://127.0.0.1:8080/readyz | grep '"status":"UP"'
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs chalsense
+          exit 1
+
+      - name: Clean up containers
+        if: always()
+        run: |
+          docker rm --force chalsense state 2>/dev/null || true
+          docker network rm chalsense-test 2>/dev/null || true
+
   widget:
     name: Widget / Node 24
     runs-on: ubuntu-latest

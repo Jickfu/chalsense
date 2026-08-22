@@ -9,3 +9,5 @@ node_modules/
 dist/
 test-results/
 playwright-report/
+deploy/compose/.env
+.container-test/

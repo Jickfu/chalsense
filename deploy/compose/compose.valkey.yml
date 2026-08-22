@@ -1,0 +1,6 @@
+services:
+  state:
+    image: valkey/valkey:7.2.14
+    command: ["valkey-server", "--appendonly", "yes", "--save", "60", "1"]
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]

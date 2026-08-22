@@ -2,6 +2,8 @@
 
 `chalsense-server` 是 D-034 批准的薄 Spring Boot HTTP 适配层。它只负责请求边界、静态配置、CORS、service credential、资源读取和健康检查；challenge/verify/ticket 状态机仍全部由 Core 执行。
 
+Maven `package` 生成可直接 `java -jar` 启动的 Spring Boot JAR。根目录 `Dockerfile` 和 [`deploy/compose`](../deploy/compose/) 提供 D-038 的非 root、本地 Redis/Valkey 部署基线；完整边界见[容器部署规范](../docs/container-deployment.md)。仓库尚未发布正式 OCI 镜像。
+
 当前默认监听 `127.0.0.1:8080`。D-035 内建限流默认关闭，只有显式配置 HMAC key、代理信任和站点限额后才能绑定非 loopback；生产环境仍必须置于负责 TLS、速率/并发限制、超时和访问日志脱敏的反向代理之后。
 
 ## 最小配置

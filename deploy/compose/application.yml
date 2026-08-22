@@ -1,0 +1,30 @@
+chalsense:
+  redis-namespace: chalsense-demo
+  background-directory: /data/backgrounds
+  maximum-concurrent-generations: 4
+  rate-limit:
+    enabled: true
+    hmac-key: ${CHALSENSE_RATE_LIMIT_HMAC_KEY}
+    trusted-proxy-cidrs: []
+  sites:
+    - site-key: site_demo
+      display-name: Local Compose Demo
+      policy-version: demo-1
+      challenge-ttl: 120s
+      ticket-ttl: 60s
+      allow-insecure-loopback-origins: true
+      allowed-actions: [login]
+      allowed-origins: [http://127.0.0.1:8000, http://localhost:8000]
+      rate-limit:
+        create-client: { burst: 5, interval: 12s }
+        create-site: { burst: 100, interval: 600ms }
+        verify-client: { burst: 10, interval: 6s }
+        verify-site: { burst: 500, interval: 120ms }
+      credentials:
+        - key-id: demo_credential
+          secret-sha256: ${CHALSENSE_SERVICE_SECRET_SHA256}
+
+management:
+  server:
+    address: 127.0.0.1
+    port: 9090
