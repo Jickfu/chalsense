@@ -7,6 +7,7 @@ import io.github.chalsense.core.challenge.slider.BackgroundImageSource;
 import io.github.chalsense.core.challenge.slider.BoundedRandom;
 import io.github.chalsense.core.challenge.slider.SliderPuzzleGenerator;
 import io.github.chalsense.core.security.SecurityEventSink;
+import io.github.chalsense.core.ratelimit.RateLimiter;
 import io.github.chalsense.core.site.SitePolicy;
 import io.github.chalsense.core.site.SiteRegistration;
 import io.github.chalsense.core.site.SiteRegistry;
@@ -21,9 +22,11 @@ import io.github.chalsense.server.security.StaticServiceCredentialAuthenticator;
 import io.github.chalsense.store.redis.JedisStateStore;
 import io.github.chalsense.store.redis.RedisChallengeResourceStore;
 import io.github.chalsense.store.redis.RedisKeyspace;
+import io.github.chalsense.store.redis.RedisRateLimiter;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import redis.clients.jedis.RedisClient;
 
 import java.net.URI;
@@ -33,6 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.net.InetAddress;
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(ChalSenseServerProperties.class)
@@ -60,6 +64,21 @@ public class ServerConfiguration {
     RedisChallengeResourceStore resourceStore(
             RedisClient client, RedisKeyspace keyspace, SecureRandom secureRandom) {
         return new RedisChallengeResourceStore(client, keyspace, secureRandom, "/v1/public/resources");
+    }
+
+    @Bean
+    RateLimiter rateLimiter(RedisClient client, RedisKeyspace keyspace,
+            ChalSenseServerProperties properties, Environment environment) {
+        boolean enabled = properties.getRateLimit().isEnabled();
+        String address = environment.getProperty("server.address", "127.0.0.1");
+        try {
+            if (!enabled && !InetAddress.getByName(address).isLoopbackAddress()) {
+                throw new IllegalArgumentException("public rate limiting must be enabled before binding a non-loopback address");
+            }
+        } catch (java.net.UnknownHostException exception) {
+            throw new IllegalArgumentException("server.address must resolve during startup", exception);
+        }
+        return new RedisRateLimiter(client, keyspace);
     }
 
     @Bean

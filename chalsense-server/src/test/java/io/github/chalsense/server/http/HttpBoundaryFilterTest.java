@@ -20,6 +20,7 @@ import java.util.Set;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class HttpBoundaryFilterTest {
@@ -34,6 +35,7 @@ class HttpBoundaryFilterTest {
                         .header("Access-Control-Request-Headers", "content-type"))
                 .andExpect(status().isNoContent())
                 .andExpect(header().string("Access-Control-Allow-Origin", "https://app.example.test"))
+                .andExpect(header().string("Access-Control-Max-Age", "300"))
                 .andExpect(header().doesNotExist("Access-Control-Allow-Credentials"));
         mvc.perform(options("/v1/public/sites/site_test/challenges")
                         .header("Origin", "https://evil.example.test")
@@ -47,12 +49,17 @@ class HttpBoundaryFilterTest {
                         .header("Origin", "https://app.example.test")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new byte[2049]))
-                .andExpect(status().isPayloadTooLarge());
+                .andExpect(status().isPayloadTooLarge())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("INVALID_REQUEST")));
         mvc.perform(post("/v1/public/sites/site_test/challenges")
                         .header("Origin", "https://app.example.test")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Content-Encoding", "gzip").content("{}"))
-                .andExpect(status().isUnsupportedMediaType());
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("INVALID_REQUEST")));
+        mvc.perform(post("/v1/public/sites/site_test/challenges")
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest());
     }
 
     private static SiteRegistry registry() {

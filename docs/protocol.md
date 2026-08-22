@@ -291,7 +291,7 @@ Redis Key、TTL 和二进制布局不是公开 API，但状态模型必须版本
 | 401/403 | `CALLER_UNAUTHORIZED` / `ORIGIN_NOT_ALLOWED` | 不自动重试；前置拒绝不消费状态 |
 | 404 或 409 | `CHALLENGE_UNAVAILABLE` / `TICKET_UNAVAILABLE` | 必须创建新 challenge；两者选定一个固定 HTTP 映射后不得按内部原因变化 |
 | 422 | `VERIFICATION_FAILED` / `TICKET_INVALID` | 原凭据已消费，不可重试 |
-| 429 | `RATE_LIMITED` | 按服务端策略稍后创建新 challenge；前置限流不消费状态 |
+| 429 | `RATE_LIMITED` | D-035 返回整数秒 `Retry-After`；前置限流不消费状态，客户端重新开始交互 |
 | 503 | `DEPENDENCY_UNAVAILABLE` | 可以稍后创建新 challenge；不得重试同一 challenge/ticket |
 
 错误响应不得带 `expectedX`、距离、容差、具体轨迹规则、票据绑定差异或 Redis 原始错误。详细原因只进入受控、低基数内部事件。

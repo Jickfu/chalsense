@@ -113,7 +113,7 @@ v0.1 不在同一端点混合公开与受信任 create/verify。若未来业务�
 | 413 | `INVALID_REQUEST` | 请求体超限，发生在 Core 调用前 |
 | 415 | `INVALID_REQUEST` | media type 不受支持，发生在 Core 调用前 |
 | 422 | `VERIFICATION_FAILED` / `TICKET_INVALID` | 状态已经消费，原凭据不得重试 |
-| 429 | `RATE_LIMITED` | 预留给公开限流；必须创建新 challenge |
+| 429 | `RATE_LIMITED` | D-035 公开前置限流；带整数秒 `Retry-After`，不消费 challenge，客户端重新开始交互 |
 | 503 | `DEPENDENCY_UNAVAILABLE` | 失败关闭；verify/consume 不得重试同一凭据 |
 
 未匹配路由与过期/不存在资源使用不带内部细节的 `404`。任何错误都不返回答案距离、容差、轨迹原因、绑定差异、Redis 异常、堆栈或原请求 body。`Cache-Control: no-store` 用于全部 JSON；错误响应不根据不存在、过期或重放改变状态码或耗时策略。
@@ -155,7 +155,7 @@ Redis 资源会增加内存与网络消耗，因此必须单独记录资源字�
 
 ## 服务器暴露与当前限制
 
-在公开限流 SPI 尚未完成前，Server 默认监听 `127.0.0.1`，不得宣传为可直接裸露公网。公网试用必须经过配置了 TLS、请求速率/并发限制、最大 body、超时和访问日志脱敏的反向代理；Redis 不得公网暴露。
+Server 默认监听 `127.0.0.1`；内建限流未启用时配置非 loopback 地址会启动失败。即使启用 D-035 限流，公网仍必须经过配置了 TLS、连接/带宽限制、最大 body、超时和访问日志脱敏的反向代理；Redis 不得公网暴露。网络身份和代理信任以 `docs/rate-limiting.md` 为准。
 
 首个纵向切片只提供 readiness/liveness、静态站点配置和上述四类端点，不提供管理后台、动态注册、Swagger UI、用户会话、设备指纹、遥测 SDK 或额外验证类型。
 

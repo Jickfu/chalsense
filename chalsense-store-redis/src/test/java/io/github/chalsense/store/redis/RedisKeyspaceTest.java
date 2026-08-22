@@ -3,6 +3,7 @@ package io.github.chalsense.store.redis;
 import io.github.chalsense.core.state.TicketDigest;
 import io.github.chalsense.protocol.ChallengeId;
 import io.github.chalsense.protocol.SiteKey;
+import io.github.chalsense.core.ratelimit.RateLimitOperation;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -26,6 +27,11 @@ class RedisKeyspaceTest {
         assertEquals(
                 "chalsense.prod:v1:resource:{AAAAAAAAAAAAAAAAAAAAAA}",
                 ascii(keyspace.resourceKey("AAAAAAAAAAAAAAAAAAAAAA")));
+        assertEquals("chalsense.prod:v1:rate:{site_test}:create:client:AAAAAAAAAAAAAAAAAAAAAA",
+                ascii(keyspace.rateLimitClientKey(new SiteKey("site_test"), RateLimitOperation.CREATE,
+                        "AAAAAAAAAAAAAAAAAAAAAA")));
+        assertEquals("chalsense.prod:v1:rate:{site_test}:verify:site",
+                ascii(keyspace.rateLimitSiteKey(new SiteKey("site_test"), RateLimitOperation.VERIFY)));
     }
 
     @Test

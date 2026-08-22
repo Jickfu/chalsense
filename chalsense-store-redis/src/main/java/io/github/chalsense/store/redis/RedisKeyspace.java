@@ -3,6 +3,7 @@ package io.github.chalsense.store.redis;
 import io.github.chalsense.core.state.TicketDigest;
 import io.github.chalsense.protocol.ChallengeId;
 import io.github.chalsense.protocol.SiteKey;
+import io.github.chalsense.core.ratelimit.RateLimitOperation;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -53,6 +54,23 @@ public final class RedisKeyspace {
             throw new IllegalArgumentException("resourceId must be a canonical 128-bit Base64url value");
         }
         return ascii(namespace + ":" + KEY_SCHEMA_VERSION + ":resource:{" + resourceId + "}");
+    }
+
+    public byte[] rateLimitClientKey(SiteKey siteKey, RateLimitOperation operation, String clientKey) {
+        Objects.requireNonNull(siteKey, "siteKey");
+        Objects.requireNonNull(operation, "operation");
+        if (clientKey == null || !clientKey.matches("[A-Za-z0-9_-]{22}") || !isCanonical128Bit(clientKey)) {
+            throw new IllegalArgumentException("clientKey must be a 128-bit Base64url value");
+        }
+        return ascii(namespace + ":" + KEY_SCHEMA_VERSION + ":rate:{" + siteKey.value() + "}:"
+                + operation.name().toLowerCase(java.util.Locale.ROOT) + ":client:" + clientKey);
+    }
+
+    public byte[] rateLimitSiteKey(SiteKey siteKey, RateLimitOperation operation) {
+        Objects.requireNonNull(siteKey, "siteKey");
+        Objects.requireNonNull(operation, "operation");
+        return ascii(namespace + ":" + KEY_SCHEMA_VERSION + ":rate:{" + siteKey.value() + "}:"
+                + operation.name().toLowerCase(java.util.Locale.ROOT) + ":site");
     }
 
     private static boolean isCanonical128Bit(String value) {

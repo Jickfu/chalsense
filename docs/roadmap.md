@@ -62,7 +62,7 @@
 - OpenAPI 3.1 与 JSON Schema。
 - 指标、结构化审计事件和 Prometheus 接入。
 - 站点配置动态来源、轮换自动化与版本兼容演练。
-- 限流 SPI 和 Redis 实现。
+- 限流策略校准、容量指标与部署演练（SPI 和 Redis 原子实现已由 D-035 建立）。
 - 高 DPI、基本移动触控、键盘与替代流程。
 - 自动化测试专用凭据或固定模式。
 - OpenCV 缺口识别与 Playwright 模拟轨迹攻击回归集。
@@ -124,6 +124,6 @@
 
 1. Protocol、Core、Redis/Valkey Store 与 `@chalsense/widget` 最小实现已经建立；继续保持冻结向量、Java 17/21、Redis/Valkey 和浏览器 CI 绿色。
 2. D-033 的生产 `SLIDER_PUZZLE` PNG 生成器、背景来源/短时资源发布 SPI、素材清单、资源上限、失败清理和确定性测试已经建立；继续保持不内置来源不明素材，不把内存资源存储误称为多实例生产实现。
-3. D-034 的薄 `chalsense-server`、Redis 硬 TTL 资源存储/读取、Widget HTTP transport，以及双 Server 共享 Redis/Valkey 的端到端 HTTP 测试已经建立；下一步补充反向代理部署示例与限流 SPI，完成前 Server 保持仅默认监听 loopback。
+3. D-034/D-035 的薄 `chalsense-server`、Redis 硬 TTL 资源、Widget HTTP transport、双 Server 端到端测试、公开限流和反向代理基线已经建立；下一步以容量测试校准站点限额并补充指标，Server 仍默认监听 loopback。
 4. 将 Q-004 的真实用户误拒率和攻击通过率校准作为 v0.1 发布前门禁，并记录最终 `policyVersion`；不得改变整数坐标线协议。
 5. 发布 npm/Maven/容器前完成 `@chalsense` scope、Maven Central namespace、容器路径、域名和商标最终核验。

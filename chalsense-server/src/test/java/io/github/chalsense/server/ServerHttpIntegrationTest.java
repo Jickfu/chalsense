@@ -142,6 +142,17 @@ class ServerHttpIntegrationTest {
         assertEquals(List.of(200, 409), List.of(consumeFirst.join().statusCode(), consumeSecond.join().statusCode())
                 .stream().sorted().toList());
         assertEquals(409, post(secondBase, consumePath, consumeBody, trustedHeaders).statusCode());
+
+        assertEquals(200, post(secondBase, "/v1/public/sites/" + SITE_KEY + "/challenges",
+                "{\"protocolVersion\":\"1\",\"action\":\"login\",\"contextDigest\":\"" + CONTEXT + "\"}",
+                Map.of("Origin", ORIGIN)).statusCode());
+        HttpResponse<byte[]> limited = post(firstBase, "/v1/public/sites/" + SITE_KEY + "/challenges",
+                "{\"protocolVersion\":\"1\",\"action\":\"login\",\"contextDigest\":\"" + CONTEXT + "\"}",
+                Map.of("Origin", ORIGIN));
+        assertEquals(429, limited.statusCode());
+        long retryAfter = Long.parseLong(limited.headers().firstValue("Retry-After").orElseThrow());
+        assertTrue(retryAfter >= 1 && retryAfter <= 60);
+        assertTrue(text(limited).contains("RATE_LIMITED"));
     }
 
     private static ConfigurableApplicationContext start(Map<String, Object> properties) {
@@ -157,11 +168,15 @@ class ServerHttpIntegrationTest {
                 Map.entry("chalsense.redis-uri", redisUri),
                 Map.entry("chalsense.redis-namespace", keyspace.namespace()),
                 Map.entry("chalsense.background-directory", imageDirectory.toString()),
+                Map.entry("chalsense.rate-limit.enabled", "true"),
+                Map.entry("chalsense.rate-limit.hmac-key", SECRET),
                 Map.entry("chalsense.sites[0].site-key", SITE_KEY),
                 Map.entry("chalsense.sites[0].display-name", "HTTP integration test"),
                 Map.entry("chalsense.sites[0].policy-version", "http-it-1"),
                 Map.entry("chalsense.sites[0].allowed-actions[0]", "login"),
                 Map.entry("chalsense.sites[0].allowed-origins[0]", ORIGIN),
+                Map.entry("chalsense.sites[0].rate-limit.create-client.burst", "2"),
+                Map.entry("chalsense.sites[0].rate-limit.create-client.interval", "60s"),
                 Map.entry("chalsense.sites[0].credentials[0].key-id", "credential_1"),
                 Map.entry("chalsense.sites[0].credentials[0].secret-sha256",
                         Base64.getUrlEncoder().withoutPadding().encodeToString(digest)));

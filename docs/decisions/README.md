@@ -256,6 +256,15 @@
 - 结论：Redis 短时资源使用独立 128 位 `resourceId`、单 hash key 与 Lua 原子完成不存在检查、两个资源和绝对 TTL 写入；读取不消费，结果未知不返回 URL，不回退内存。资源 ID 不复用 `challengeId`，清理只针对本次 publish 返回的资源集合。
 - 原因：path `siteKey` 让 CORS preflight 可在不读取 body 时应用站点策略；分离授权面阻止调用方类型混淆；成熟 Servlet 容器减少自制 HTTP 边界；Redis 原子资源包让多实例读取与 challenge 生命周期一致。
 
+### D-035 公开限流与代理网络身份
+
+- 日期：2026-08-22
+- 状态：已批准。
+- 结论：v0.1 内建限流只覆盖 public create/verify，并在 Core 调用和 challenge take 前执行；trusted consume 继续由 service credential、网络隔离和反向代理保护。429 使用 `RATE_LIMITED` 与整数秒 `Retry-After`，不消费 challenge；Redis 判定结果未知时失败关闭为 503，不回退单机内存。
+- 结论：每次请求必须由同一 Redis Lua 原子判定 `siteKey + operation + clientNetwork` 与 `siteKey + operation` 两个 token bucket，只有两者均允许才同时扣减。限额按站点配置，不把示例数值宣传为通用安全阈值。资源 GET/HEAD 的带宽、连接数和缓存保护仍由反向代理承担。
+- 结论：默认只信任 TCP 直连地址。只有直连 peer 位于显式 `trustedProxyCidrs` 时才从右向左解析并剥离 `X-Forwarded-For` 中的可信代理；畸形或歧义输入前置拒绝。IPv4 使用完整地址，IPv6 归一到 `/64`，再使用部署方 32 字节 HMAC key 生成 128 位不透明 client key；Redis、日志和指标不得保存原始 IP，也不得与轨迹组合成设备指纹。
+- 原因：双桶限制同时控制单一来源和站点总容量；原子判定避免部分扣减与多实例竞态；显式代理信任阻止伪造 forwarded header 绕过；HMAC 和短 TTL 在保留滥用控制能力的同时降低网络标识长期泄露风险。
+
 ## 工作假设
 
 ### A-002 生产存储

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.Locale;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -37,6 +38,11 @@ public final class HttpBoundaryFilter extends OncePerRequestFilter {
         response.setHeader("X-Content-Type-Options", "nosniff");
         String path = request.getRequestURI();
         Matcher publicSite = PUBLIC_SITE.matcher(path);
+        if (publicSite.matches() && request.getHeader("Origin") == null
+                && ("POST".equals(request.getMethod()) || "OPTIONS".equals(request.getMethod()))) {
+            reject(response, 400, "INVALID_REQUEST");
+            return;
+        }
         if (publicSite.matches() && request.getHeader("Origin") != null) {
             if (!applyCors(request, response, publicSite.group(1))) {
                 reject(response, 403, "ORIGIN_NOT_ALLOWED");
@@ -51,17 +57,18 @@ public final class HttpBoundaryFilter extends OncePerRequestFilter {
         if (maximum > 0 && "POST".equals(request.getMethod())) {
             String encoding = request.getHeader("Content-Encoding");
             if (encoding != null && !encoding.equalsIgnoreCase("identity")) {
-                reject(response, 415, "UNSUPPORTED_MEDIA_TYPE");
+                reject(response, 415, "INVALID_REQUEST");
                 return;
             }
             String contentType = request.getContentType();
-            if (contentType == null || !contentType.toLowerCase().matches("application/json(?:\\s*;\\s*charset=utf-8)?")) {
-                reject(response, 415, "UNSUPPORTED_MEDIA_TYPE");
+            if (contentType == null || !contentType.toLowerCase(Locale.ROOT)
+                    .matches("application/json(?:\\s*;\\s*charset=utf-8)?")) {
+                reject(response, 415, "INVALID_REQUEST");
                 return;
             }
             byte[] body = request.getInputStream().readNBytes(maximum + 1);
             if (body.length > maximum) {
-                reject(response, 413, "PAYLOAD_TOO_LARGE");
+                reject(response, 413, "INVALID_REQUEST");
                 return;
             }
             chain.doFilter(new BufferedRequest(request, body), response);
@@ -84,7 +91,7 @@ public final class HttpBoundaryFilter extends OncePerRequestFilter {
             response.setHeader("Access-Control-Allow-Origin", origin.value());
             response.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
             response.setHeader("Access-Control-Allow-Headers", "Content-Type");
-            response.setHeader("Access-Control-Max-Age", "600");
+            response.setHeader("Access-Control-Max-Age", "300");
             response.addHeader("Vary", "Origin");
             response.addHeader("Vary", "Access-Control-Request-Method");
             response.addHeader("Vary", "Access-Control-Request-Headers");

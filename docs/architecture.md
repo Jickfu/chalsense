@@ -34,7 +34,7 @@ TypeScript Web Component
 
 - `chalsense-protocol`：公共请求、响应、错误、版本和 JSON Schema。
 - `chalsense-core`：挑战生成、验证、票据、安全状态机和扩展接口；不依赖 Spring。
-- `chalsense-store-redis`：Redis/Valkey 状态、原子消费和 TTL 实现；当前不包含限流。
+- `chalsense-store-redis`：Redis/Valkey 状态、原子消费、TTL、短时资源和 D-035 原子双桶限流实现。
 - `chalsense-spring-boot-starter`：Spring Bean、配置绑定和接入适配。
 - `chalsense-server`：薄 HTTP 服务层，不重复实现 Core 逻辑。
 - `@chalsense/widget`：TypeScript Web Component、Canvas 渲染、Pointer Events 和主题。
@@ -167,4 +167,4 @@ storageVersion 1 的 Core codec、严格 reader、固定 writer 与原子 Store 
 
 ## 仍需验证的问题
 
-D-013～D-034 已批准上述协议、资源、存储、站点模型、协议词法约束、ticket 摘要输入、调用方/Origin、TTL、Redis Store、不可解码状态语义、Cluster 延期、Widget、生产滑块生成边界与 HTTP v0.1。D-023 冻结了 verify/consume 向量，D-026 独立冻结了 create 补充向量，D-027 冻结了 storageVersion 1 状态 JSON。D-014 确定性原型也已通过并由 Widget Vitest runner 执行。Q-004 的最终经验性容差校准属于 v0.1 发布前门禁；它可以调整 `policyVersion` 和服务端容差，但不得改变整数坐标线协议或把容差交给客户端指定。
+D-013～D-035 已批准上述协议、资源、存储、站点模型、协议词法约束、ticket 摘要输入、调用方/Origin、TTL、Redis Store、不可解码状态语义、Cluster 延期、Widget、生产滑块生成边界、HTTP v0.1 与公开限流/代理信任边界。D-023 冻结了 verify/consume 向量，D-026 独立冻结了 create 补充向量，D-027 冻结了 storageVersion 1 状态 JSON。D-014 确定性原型也已通过并由 Widget Vitest runner 执行。Q-004 的最终经验性容差校准属于 v0.1 发布前门禁；它可以调整 `policyVersion` 和服务端容差，但不得改变整数坐标线协议或把容差交给客户端指定。

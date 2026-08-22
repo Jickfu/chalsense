@@ -14,6 +14,10 @@ import io.github.chalsense.protocol.ContextDigest;
 import io.github.chalsense.protocol.ProtocolVersion;
 import io.github.chalsense.protocol.SiteKey;
 import io.github.chalsense.protocol.VerificationTicket;
+import io.github.chalsense.core.ratelimit.RateLimitOperation;
+import io.github.chalsense.core.ratelimit.RateLimitPolicy;
+import io.github.chalsense.core.ratelimit.RateLimitRequest;
+import io.github.chalsense.core.ratelimit.RateLimitResult;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -160,6 +164,18 @@ class RedisStateStoreIntegrationTest {
                 firstStore.takeChallenge(SITE_KEY, CHALLENGE_ID));
         assertInstanceOf(TakeResult.Present.class,
                 otherStore.takeChallenge(SITE_KEY, CHALLENGE_ID));
+    }
+
+    @Test
+    void sharesAtomicRateLimitAcrossInstances() {
+        RateLimitRequest request = new RateLimitRequest(SITE_KEY, RateLimitOperation.CREATE,
+                "AAAAAAAAAAAAAAAAAAAAAA", new RateLimitPolicy(1, 60_000),
+                new RateLimitPolicy(10, 60_000));
+        assertInstanceOf(RateLimitResult.Allowed.class,
+                new RedisRateLimiter(client, keyspace).acquire(request));
+        RateLimitResult.Limited limited = assertInstanceOf(RateLimitResult.Limited.class,
+                new RedisRateLimiter(client, keyspace).acquire(request));
+        assertTrue(limited.retryAfterMillis() > 0 && limited.retryAfterMillis() <= 60_000);
     }
 
     private static <T> List<T> concurrently(ThrowingSupplier<T> operation) throws Exception {

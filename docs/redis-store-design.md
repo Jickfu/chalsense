@@ -54,7 +54,7 @@ chalsense-store-redis
   └─ Redis/Valkey integration tests
 ```
 
-模块不得依赖 Spring，不实现限流、站点注册、HTTP、资源存储或业务重试。`StateJsonCodec` 仍由 Core 提供，Redis 模块不得自行维护第二套 JSON 映射。
+模块不得依赖 Spring，不实现站点注册、HTTP 或业务重试。D-034/D-035 的短时资源和原子限流适配与状态 Store 共享 Jedis/namespace，但使用独立 key 类型；`StateJsonCodec` 仍由 Core 提供，Redis 模块不得自行维护第二套 JSON 映射。
 
 当前公开构造方式只接受池化 `RedisClient`，且调用方负责客户端生命周期。不得直接传入 `RedisClusterClient`；Cluster 专用适配器必须先解决 D-030 的命令重放问题并通过真实 Cluster 故障测试。
 
