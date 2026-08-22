@@ -43,6 +43,8 @@ GitHub Actions 的 `Capacity benchmark` 仅支持手动触发，不加入每次 
 
 机器报告位于 `chalsense-server/target/capacity-report.json`。只能连接专用测试实例，因为测试会创建并在结束时清理自己的随机 namespace。
 
+带提交与运行环境限定的参考结果存放在 [`capacity-results/`](capacity-results/)；当前首份记录为 [2026-08-22 GitHub Actions 合成容量参考](capacity-results/2026-08-22-github-actions.md)。不得脱离其限制说明引用数字。
+
 ## 校准与评审门禁
 
 部署校准至少要覆盖预期稳态、预期峰值、Redis 网络延迟和单实例故障后的剩余容量。建议从满足目标 p95/p99 的持续吞吐中保守取值，再分别设置 client bucket、site bucket、反向代理连接/带宽限制和告警；不能直接复制本仓库示例值或一次共享 runner 结果。
