@@ -244,6 +244,7 @@
 - 结论：源图宽高、像素数、输出字节、生成并发和几何边距必须有硬上限。随机几何使用可注入 CSPRNG；确定性测试使用测试专用随机源和程序生成图片。目标位置、容差、`contextDigest` 与 ticket 不进入资源发布边界。
 - 结论：两个资源必须整包发布或明确失败，资源有效期不得超过 challenge。资源在 TTL 内允许重复读取，不改变 verify 的一次性消费。Challenge State 未确认写入、ID 冲突或后续创建失败时执行 best-effort 清理；清理失败的孤儿资源也必须由 publisher 的硬 TTL 删除。
 - 结论：Core 不提供会被误用为多实例生产存储的默认内存资源实现，也不冻结 HTTP 资源路径。具体文件系统、对象存储或 Redis 二进制实现由适配层显式装配，并遵守相同 TTL、容量和失败语义。
+- 安全修订：资源清理必须接收本次 `publish` 返回的完整资源引用集合，不得只按 `challengeId` 推导删除目标。原因是挑战 ID 碰撞时，按 ID 清理可能误删既有挑战资源；publisher 生成的独立资源标识才是本次发布的精确所有权边界。
 - 原因：用 JDK 能力先建立可测试、无框架的生成边界，同时避免把素材来源、HTTP 路径或特定对象存储耦合进 Core；整包发布、失败清理与硬 TTL 限制资源泄漏和半成功挑战。
 
 ## 工作假设
@@ -257,6 +258,12 @@
 - 使用 TypeScript、Web Component、Canvas 和 Pointer Events，框架适配包后置。
 
 ## 待决策
+
+### Q-010 HTTP API v0.1 与独立服务实现线
+
+- 状态：推荐方案已形成，等待项目所有者批准后记录为 D-034；批准前不得创建 `chalsense-server` 或冻结公开 HTTP API。
+- 推荐：采用 `docs/http-api.md` 的 `/v1/public` 与 `/v1/trusted` 分离路径、path 中的 `siteKey/challengeId`、严格 JSON、固定错误状态码、精确无 credential CORS、`Authorization: Bearer keyId.secret`、Redis hash + Lua 短时资源，以及仅进入 Server 的 Spring Boot 4.1 Servlet 栈。
+- 影响：路径、JSON 映射、认证承载、状态码和 CORS 一旦被其他语言客户端或 Widget adapter 使用，就形成协议兼容面；资源存储选择影响多实例一致性和 Redis 容量。
 
 ### Q-004 坐标与容差规范
 

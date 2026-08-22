@@ -95,7 +95,7 @@ public final class SliderPuzzleGenerator implements ChallengeGenerator {
                 return new GeneratedChallenge(geometry, LOGICAL_WIDTH, LOGICAL_HEIGHT, resources);
             } catch (RuntimeException exception) {
                 try {
-                    publisher.delete(request.site().siteKey(), request.challengeId());
+                    publisher.delete(resources);
                 } catch (RuntimeException ignored) {
                     // Publisher hard TTL remains the final cleanup boundary.
                 }
@@ -108,7 +108,7 @@ public final class SliderPuzzleGenerator implements ChallengeGenerator {
 
     @Override
     public void discard(ChallengeGenerationRequest request, GeneratedChallenge generated) {
-        publisher.delete(request.site().siteKey(), request.challengeId());
+        publisher.delete(generated.resources());
     }
 
     private int bounded(int bound) {

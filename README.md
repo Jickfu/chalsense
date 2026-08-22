@@ -30,10 +30,11 @@ ChalSense 是一个面向 JVM 与 Web 应用的自托管人机验证项目，目
 10. [Redis / Valkey Store 设计](docs/redis-store-design.md)：了解客户端依赖、key、命令、TTL、故障映射与集成测试拓扑。
 11. [Widget 设计与测试](docs/widget.md)：了解 Web Component API、transport、渲染、交互、无障碍和浏览器测试边界。
 12. [滑块生成器与短时资源](docs/slider-generator.md)：了解素材、图片生成、资源发布、上限和清理边界。
-13. [决策记录](docs/decisions/README.md)：区分已批准结论、工作假设和待决策事项。
-14. [技术决策依据](docs/remaining-decisions.md)：了解 D-013～D-018 的选型依据、取舍及 D-014 的条件边界。
-15. [路线图](docs/roadmap.md)：了解分期范围、完成标准和评估指标。
-16. [阶段 0 评审](docs/stage-0-review.md)：了解当前证据、阻塞项和是否允许开始实现。
+13. [HTTP API v0.1 草案](docs/http-api.md)：了解待批准的路径、认证、错误、CORS、资源和 Server 实现线。
+14. [决策记录](docs/decisions/README.md)：区分已批准结论、工作假设和待决策事项。
+15. [技术决策依据](docs/remaining-decisions.md)：了解 D-013～D-018 的选型依据、取舍及 D-014 的条件边界。
+16. [路线图](docs/roadmap.md)：了解分期范围、完成标准和评估指标。
+17. [阶段 0 评审](docs/stage-0-review.md)：了解当前证据、阻塞项和是否允许开始实现。
 
 ## 当前阶段的完成标准
 

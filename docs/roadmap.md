@@ -124,6 +124,6 @@
 
 1. Protocol、Core、Redis/Valkey Store 与 `@chalsense/widget` 最小实现已经建立；继续保持冻结向量、Java 17/21、Redis/Valkey 和浏览器 CI 绿色。
 2. D-033 的生产 `SLIDER_PUZZLE` PNG 生成器、背景来源/短时资源发布 SPI、素材清单、资源上限、失败清理和确定性测试已经建立；继续保持不内置来源不明素材，不把内存资源存储误称为多实例生产实现。
-3. 下一实现里程碑是建立薄 `chalsense-server` HTTP 纵向切片，并在适配层实现有硬 TTL 的具体资源存储/读取，让 Widget transport 与 Core 状态机端到端联通；不得在 HTTP 层复制验证逻辑或冻结未经评审的错误语义。
+3. Q-010 / `docs/http-api.md` 已形成薄 `chalsense-server` HTTP 纵向切片推荐草案；项目所有者批准并记录 D-034 后，再实现有硬 TTL 的 Redis 资源存储/读取和 Widget HTTP transport。不得在 HTTP 层复制验证逻辑或把草案提前视为已发布接口。
 4. 将 Q-004 的真实用户误拒率和攻击通过率校准作为 v0.1 发布前门禁，并记录最终 `policyVersion`；不得改变整数坐标线协议。
 5. 发布 npm/Maven/容器前完成 `@chalsense` scope、Maven Central namespace、容器路径、域名和商标最终核验。

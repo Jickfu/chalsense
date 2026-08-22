@@ -116,6 +116,18 @@ class SliderPuzzleGeneratorTest {
     }
 
     @Test
+    void discardDeletesOnlyTheExactPublishedResourceReferences() {
+        RecordingPublisher publisher = new RecordingPublisher();
+        SliderPuzzleGenerator generator = new SliderPuzzleGenerator(
+                ignored -> gradient(320, 180), publisher, bound -> 0, 1);
+        GeneratedChallenge generated = generator.generate(request());
+
+        generator.discard(request(), generated);
+
+        assertEquals(generated.resources(), publisher.deletedResources);
+    }
+
+    @Test
     void binaryResourceDefensivelyCopiesBytes() {
         byte[] original = { 1, 2, 3 };
         ChallengeBinaryResource resource = new ChallengeBinaryResource(
@@ -191,6 +203,7 @@ class SliderPuzzleGeneratorTest {
         private final AtomicInteger publishCalls = new AtomicInteger();
         private final AtomicInteger deleteCalls = new AtomicInteger();
         private ChallengeResourceBundle bundle;
+        private List<ChallengeResource> deletedResources;
         private boolean invalidMetadata;
 
         @Override
@@ -209,8 +222,9 @@ class SliderPuzzleGeneratorTest {
         }
 
         @Override
-        public void delete(SiteKey siteKey, ChallengeId challengeId) {
+        public void delete(List<ChallengeResource> publishedResources) {
             deleteCalls.incrementAndGet();
+            deletedResources = List.copyOf(publishedResources);
         }
     }
 }

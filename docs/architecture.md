@@ -167,4 +167,4 @@ storageVersion 1 的 Core codec、严格 reader、固定 writer 与原子 Store 
 
 ## 仍需验证的问题
 
-D-013～D-018 与 D-021～D-033 已批准上述协议、资源、存储、站点模型、协议词法约束、ticket 摘要输入、调用方/Origin、TTL、Redis Store、不可解码状态语义、Cluster 延期、Widget 和生产滑块生成边界；D-023 冻结了 verify/consume 向量，D-026 独立冻结了 create 补充向量，D-027 冻结了 storageVersion 1 状态 JSON。D-014 确定性原型也已通过并由 Widget Vitest runner 执行。Q-004 的最终经验性容差校准属于 v0.1 发布前门禁；它可以调整 `policyVersion` 和服务端容差，但不得改变整数坐标线协议或把容差交给客户端指定。
+D-013～D-018 与 D-021～D-033 已批准上述协议、资源、存储、站点模型、协议词法约束、ticket 摘要输入、调用方/Origin、TTL、Redis Store、不可解码状态语义、Cluster 延期、Widget 和生产滑块生成边界；D-023 冻结了 verify/consume 向量，D-026 独立冻结了 create 补充向量，D-027 冻结了 storageVersion 1 状态 JSON。D-014 确定性原型也已通过并由 Widget Vitest runner 执行。Q-010 正等待项目所有者批准 HTTP 路径、认证、错误、CORS、Redis 资源和 Server 技术栈，批准前 `docs/http-api.md` 只是推荐草案。Q-004 的最终经验性容差校准属于 v0.1 发布前门禁；它可以调整 `policyVersion` 和服务端容差，但不得改变整数坐标线协议或把容差交给客户端指定。

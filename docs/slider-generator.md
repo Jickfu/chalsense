@@ -13,7 +13,7 @@
 3. CSPRNG 选择缺口位置和左侧拼图片起点，生成带透明通道的拼图片及有可见缺口的背景。
 4. 两个 PNG 在内存中完成大小检查后，以一个 `ChallengeResourceBundle` 交给 `ChallengeResourcePublisher`。
 5. publisher 只有在两个资源均可读取且过期时间不晚于 challenge 时才返回公开引用；半成功视为失败。
-6. Challenge State 写入失败或 ID 冲突时，Core 调用生成器的 best-effort `discard`。清理失败的孤儿资源仍必须依靠 publisher 的硬 TTL 自动过期。
+6. Challenge State 写入失败或 ID 冲突时，Core 调用生成器的 best-effort `discard`，publisher 只接收并删除本次发布返回的不透明资源引用，不按 `challengeId` 推导清理目标。清理失败的孤儿资源仍必须依靠 publisher 的硬 TTL 自动过期。
 
 ## 固定上限与几何
 
@@ -40,7 +40,7 @@
 - 允许 Widget 在 TTL 内重复读取图片，资源读取不改变 challenge 的单次 verify 语义；
 - 返回准确 media type、像素尺寸和有限长度，HTTP 适配器以后负责 `nosniff`、`no-referrer` 与缓存头；
 - 不接收或保存 `pieceTargetX`、`tolerance`、ticket 或 `contextDigest`；
-- 在 `expiresAt` 到达后不可读取，并提供幂等 best-effort 删除。
+- 在 `expiresAt` 到达后不可读取，并只针对本次 `publish` 返回的资源集合提供幂等 best-effort 删除；不得仅按 `challengeId` 删除，以免碰撞路径影响既有挑战。
 
 Core 当前不提供内存或文件系统“生产默认实现”。内存实现会破坏多实例一致性，文件系统实现是否共享取决于部署拓扑；两者只可由接入层显式选择。未来对象存储或 Redis 二进制资源实现必须遵守同一 SPI，并单独审查容量、TTL 和故障语义。
 
