@@ -33,10 +33,11 @@ ChalSense 是一个面向 JVM 与 Web 应用的自托管人机验证项目，目
 13. [HTTP API v0.1](docs/http-api.md)：了解已批准的路径、认证、错误、CORS、资源和 Server 实现线。
 14. [公开限流与反向代理](docs/rate-limiting.md)：了解双桶、代理信任、网络标识隐私和失败策略。
 15. [可观测性、审计与健康](docs/observability.md)：了解低基数指标、隐私安全日志和管理端口边界。
-16. [决策记录](docs/decisions/README.md)：区分已批准结论、工作假设和待决策事项。
-17. [技术决策依据](docs/remaining-decisions.md)：了解 D-013～D-018 的选型依据、取舍及 D-014 的条件边界。
-18. [路线图](docs/roadmap.md)：了解分期范围、完成标准和评估指标。
-19. [阶段 0 评审](docs/stage-0-review.md)：了解当前证据、阻塞项和是否允许开始实现。
+16. [容量测试与限额校准](docs/capacity-testing.md)：了解合成基准口径、隐私边界和生产校准门禁。
+17. [决策记录](docs/decisions/README.md)：区分已批准结论、工作假设和待决策事项。
+18. [技术决策依据](docs/remaining-decisions.md)：了解 D-013～D-018 的选型依据、取舍及 D-014 的条件边界。
+19. [路线图](docs/roadmap.md)：了解分期范围、完成标准和评估指标。
+20. [阶段 0 评审](docs/stage-0-review.md)：了解当前证据、阻塞项和是否允许开始实现。
 
 ## 当前阶段的完成标准
 

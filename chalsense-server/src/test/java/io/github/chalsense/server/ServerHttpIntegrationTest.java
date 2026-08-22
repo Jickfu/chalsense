@@ -31,10 +31,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class ServerHttpIntegrationTest {
@@ -97,6 +101,7 @@ class ServerHttpIntegrationTest {
 
     @Test
     void completesCrossInstanceHttpFlowAndRejectsConcurrentReplays() throws Exception {
+        assumeFalse(Boolean.getBoolean("chalsense.capacity.benchmark"));
         HttpResponse<byte[]> created = post(firstBase,
                 "/v1/public/sites/" + SITE_KEY + "/challenges",
                 "{\"protocolVersion\":\"1\",\"action\":\"login\",\"contextDigest\":\"" + CONTEXT + "\"}",
@@ -169,6 +174,159 @@ class ServerHttpIntegrationTest {
         assertEquals(404, get(firstBase, "/actuator/prometheus").statusCode());
     }
 
+    @Test
+    void measuresSyntheticEndToEndCapacity() throws Exception {
+        assumeTrue(Boolean.getBoolean("chalsense.capacity.benchmark"));
+        int warmup = boundedInteger("chalsense.capacity.warmup", 20, 0, 10_000);
+        int iterations = boundedInteger("chalsense.capacity.iterations", 200, 1, 100_000);
+        int concurrency = boundedInteger("chalsense.capacity.concurrency", 4, 1, 128);
+
+        for (int index = 0; index < warmup; index++) runCapacityFlow(index);
+        CapacitySamples samples = new CapacitySamples();
+        long started = System.nanoTime();
+        ExecutorService executor = Executors.newFixedThreadPool(concurrency);
+        try {
+            List<CompletableFuture<Void>> tasks = new ArrayList<>(iterations);
+            for (int index = 0; index < iterations; index++) {
+                int flowIndex = index;
+                tasks.add(CompletableFuture.runAsync(() -> {
+                    try {
+                        samples.add(runCapacityFlow(flowIndex));
+                    } catch (Exception exception) {
+                        throw new IllegalStateException("capacity flow failed", exception);
+                    }
+                }, executor));
+            }
+            CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new)).join();
+        } finally {
+            executor.shutdown();
+            assertTrue(executor.awaitTermination(10, TimeUnit.SECONDS));
+        }
+        double elapsedSeconds = (System.nanoTime() - started) / 1_000_000_000.0;
+        String report = samples.report(iterations, concurrency, elapsedSeconds);
+        Path reportPath = Path.of("target", "capacity-report.json");
+        Files.createDirectories(reportPath.getParent());
+        Files.writeString(reportPath, report);
+        System.out.println("CHALSENSE_CAPACITY_REPORT=" + report);
+    }
+
+    private static FlowSample runCapacityFlow(int index) throws Exception {
+        URI createBase = index % 2 == 0 ? firstBase : secondBase;
+        URI verifyBase = index % 2 == 0 ? secondBase : firstBase;
+        long createStarted = System.nanoTime();
+        HttpResponse<byte[]> created = post(createBase, "/v1/public/sites/" + SITE_KEY + "/challenges",
+                "{\"protocolVersion\":\"1\",\"action\":\"login\",\"contextDigest\":\"" + CONTEXT + "\"}",
+                Map.of("Origin", ORIGIN));
+        long createNanos = System.nanoTime() - createStarted;
+        assertEquals(200, created.statusCode());
+        String createJson = text(created);
+        String challengeId = capture(CHALLENGE_ID, createJson);
+        List<String> resources = captures(RESOURCE_URL, createJson);
+        assertEquals(2, resources.size());
+
+        long resourceBytes = 0;
+        long resourcesStarted = System.nanoTime();
+        for (String resource : resources) {
+            HttpResponse<byte[]> response = get(verifyBase, resource);
+            assertEquals(200, response.statusCode());
+            resourceBytes += response.body().length;
+        }
+        long resourcesNanos = System.nanoTime() - resourcesStarted;
+
+        // Test fixture inspection only: this is deliberately outside every measured HTTP interval.
+        byte[] encodedState = redis.get(keyspace.challengeKey(new SiteKey(SITE_KEY), new ChallengeId(challengeId)));
+        assertNotNull(encodedState);
+        ChallengeState state = new StateJsonCodec().decodeChallenge(encodedState);
+        long finalPieceX = state.geometry().pieceTargetX();
+        long trackX = finalPieceX - state.geometry().pieceStartX();
+        String verifyBody = "{\"protocolVersion\":\"1\",\"solution\":{\"finalPieceX\":" + finalPieceX
+                + ",\"track\":[{\"x\":0,\"y\":0,\"t\":0,\"event\":\"START\"},{\"x\":" + trackX
+                + ",\"y\":0,\"t\":400,\"event\":\"END\"}]}}";
+        long verifyStarted = System.nanoTime();
+        HttpResponse<byte[]> verified = post(verifyBase,
+                "/v1/public/sites/" + SITE_KEY + "/challenges/" + challengeId + "/verify", verifyBody,
+                Map.of("Origin", ORIGIN));
+        long verifyNanos = System.nanoTime() - verifyStarted;
+        assertEquals(200, verified.statusCode());
+        String ticket = capture(TICKET, text(verified));
+
+        String consumeBody = "{\"protocolVersion\":\"1\",\"verificationTicket\":\"" + ticket
+                + "\",\"action\":\"login\",\"contextDigest\":\"" + CONTEXT + "\"}";
+        long consumeStarted = System.nanoTime();
+        HttpResponse<byte[]> consumed = post(createBase,
+                "/v1/trusted/sites/" + SITE_KEY + "/verification-tickets/consume", consumeBody,
+                Map.of("Authorization", "Bearer credential_1." + SECRET));
+        long consumeNanos = System.nanoTime() - consumeStarted;
+        assertEquals(200, consumed.statusCode());
+        return new FlowSample(createNanos, resourcesNanos, verifyNanos, consumeNanos,
+                created.body().length, resourceBytes, verified.body().length, consumed.body().length);
+    }
+
+    private static int boundedInteger(String name, int defaultValue, int minimum, int maximum) {
+        int value = Integer.getInteger(name, defaultValue);
+        if (value < minimum || value > maximum) {
+            throw new IllegalArgumentException(name + " must be between " + minimum + " and " + maximum);
+        }
+        return value;
+    }
+
+    private record FlowSample(long createNanos, long resourcesNanos, long verifyNanos, long consumeNanos,
+                              long createBytes, long resourceBytes, long verifyBytes, long consumeBytes) {
+    }
+
+    private static final class CapacitySamples {
+        private final List<FlowSample> values = new ArrayList<>();
+
+        synchronized void add(FlowSample sample) {
+            values.add(sample);
+        }
+
+        synchronized String report(int iterations, int concurrency, double elapsedSeconds) {
+            String target = System.getProperty("chalsense.capacity.target", "local").replaceAll("[^A-Za-z0-9._-]", "_");
+            return "{\n"
+                    + "  \"schemaVersion\": 1,\n"
+                    + "  \"target\": \"" + target + "\",\n"
+                    + "  \"javaVersion\": \"" + safeProperty("java.version") + "\",\n"
+                    + "  \"os\": \"" + safeProperty("os.name") + " " + safeProperty("os.arch") + "\",\n"
+                    + "  \"iterations\": " + iterations + ",\n"
+                    + "  \"concurrency\": " + concurrency + ",\n"
+                    + "  \"elapsedSeconds\": " + decimal(elapsedSeconds) + ",\n"
+                    + "  \"flowsPerSecond\": " + decimal(iterations / elapsedSeconds) + ",\n"
+                    + "  \"latencyMicros\": {\n"
+                    + "    \"create\": " + distribution(values.stream().map(FlowSample::createNanos).toList(), 1_000) + ",\n"
+                    + "    \"resources\": " + distribution(values.stream().map(FlowSample::resourcesNanos).toList(), 1_000) + ",\n"
+                    + "    \"verify\": " + distribution(values.stream().map(FlowSample::verifyNanos).toList(), 1_000) + ",\n"
+                    + "    \"consume\": " + distribution(values.stream().map(FlowSample::consumeNanos).toList(), 1_000) + "\n"
+                    + "  },\n"
+                    + "  \"payloadBytes\": {\n"
+                    + "    \"create\": " + distribution(values.stream().map(FlowSample::createBytes).toList(), 1) + ",\n"
+                    + "    \"resources\": " + distribution(values.stream().map(FlowSample::resourceBytes).toList(), 1) + ",\n"
+                    + "    \"verify\": " + distribution(values.stream().map(FlowSample::verifyBytes).toList(), 1) + ",\n"
+                    + "    \"consume\": " + distribution(values.stream().map(FlowSample::consumeBytes).toList(), 1) + "\n"
+                    + "  }\n"
+                    + "}\n";
+        }
+
+        private static String distribution(List<Long> samples, long divisor) {
+            List<Long> sorted = samples.stream().sorted().toList();
+            return "{\"p50\":" + percentile(sorted, 50) / divisor + ",\"p95\":" + percentile(sorted, 95) / divisor
+                    + ",\"p99\":" + percentile(sorted, 99) / divisor + ",\"max\":" + sorted.get(sorted.size() - 1) / divisor + "}";
+        }
+
+        private static long percentile(List<Long> sorted, int percentile) {
+            int index = Math.max(0, (int) Math.ceil(percentile / 100.0 * sorted.size()) - 1);
+            return sorted.get(index);
+        }
+
+        private static String safeProperty(String name) {
+            return System.getProperty(name, "unknown").replaceAll("[^A-Za-z0-9 ._()-]", "_");
+        }
+
+        private static String decimal(double value) {
+            return String.format(java.util.Locale.ROOT, "%.3f", value);
+        }
+    }
+
     private static ConfigurableApplicationContext start(Map<String, Object> properties) {
         return new SpringApplicationBuilder(ChalSenseServerApplication.class).properties(properties)
                 .run("--server.port=0", "--management.server.port=0");
@@ -176,12 +334,19 @@ class ServerHttpIntegrationTest {
 
     private static Map<String, Object> properties() throws Exception {
         byte[] digest = MessageDigest.getInstance("SHA-256").digest(Base64.getUrlDecoder().decode(SECRET));
+        boolean capacity = Boolean.getBoolean("chalsense.capacity.benchmark");
+        int capacityBurst = capacity
+                ? boundedInteger("chalsense.capacity.warmup", 20, 0, 10_000)
+                + boundedInteger("chalsense.capacity.iterations", 200, 1, 100_000) + 100
+                : 2;
         return Map.ofEntries(
                 Map.entry("spring.main.banner-mode", "off"),
                 Map.entry("logging.level.root", "WARN"),
                 Map.entry("chalsense.redis-uri", redisUri),
                 Map.entry("chalsense.redis-namespace", keyspace.namespace()),
                 Map.entry("chalsense.background-directory", imageDirectory.toString()),
+                Map.entry("chalsense.maximum-concurrent-generations", capacity
+                        ? Integer.toString(boundedInteger("chalsense.capacity.concurrency", 4, 1, 128)) : "4"),
                 Map.entry("chalsense.rate-limit.enabled", "true"),
                 Map.entry("chalsense.rate-limit.hmac-key", SECRET),
                 Map.entry("chalsense.sites[0].site-key", SITE_KEY),
@@ -189,8 +354,14 @@ class ServerHttpIntegrationTest {
                 Map.entry("chalsense.sites[0].policy-version", "http-it-1"),
                 Map.entry("chalsense.sites[0].allowed-actions[0]", "login"),
                 Map.entry("chalsense.sites[0].allowed-origins[0]", ORIGIN),
-                Map.entry("chalsense.sites[0].rate-limit.create-client.burst", "2"),
-                Map.entry("chalsense.sites[0].rate-limit.create-client.interval", "60s"),
+                Map.entry("chalsense.sites[0].rate-limit.create-client.burst", Integer.toString(capacityBurst)),
+                Map.entry("chalsense.sites[0].rate-limit.create-client.interval", capacity ? "1ms" : "60s"),
+                Map.entry("chalsense.sites[0].rate-limit.create-site.burst", Integer.toString(capacityBurst)),
+                Map.entry("chalsense.sites[0].rate-limit.create-site.interval", capacity ? "1ms" : "60s"),
+                Map.entry("chalsense.sites[0].rate-limit.verify-client.burst", Integer.toString(capacityBurst)),
+                Map.entry("chalsense.sites[0].rate-limit.verify-client.interval", capacity ? "1ms" : "60s"),
+                Map.entry("chalsense.sites[0].rate-limit.verify-site.burst", Integer.toString(capacityBurst)),
+                Map.entry("chalsense.sites[0].rate-limit.verify-site.interval", capacity ? "1ms" : "60s"),
                 Map.entry("chalsense.sites[0].credentials[0].key-id", "credential_1"),
                 Map.entry("chalsense.sites[0].credentials[0].secret-sha256",
                         Base64.getUrlEncoder().withoutPadding().encodeToString(digest)));
