@@ -171,7 +171,7 @@ class ServerHttpIntegrationTest {
 
     private static ConfigurableApplicationContext start(Map<String, Object> properties) {
         return new SpringApplicationBuilder(ChalSenseServerApplication.class).properties(properties)
-                .run("--server.port=0");
+                .run("--server.port=0", "--management.server.port=0");
     }
 
     private static Map<String, Object> properties() throws Exception {
@@ -179,7 +179,6 @@ class ServerHttpIntegrationTest {
         return Map.ofEntries(
                 Map.entry("spring.main.banner-mode", "off"),
                 Map.entry("logging.level.root", "WARN"),
-                Map.entry("management.server.port", "0"),
                 Map.entry("chalsense.redis-uri", redisUri),
                 Map.entry("chalsense.redis-namespace", keyspace.namespace()),
                 Map.entry("chalsense.background-directory", imageDirectory.toString()),
