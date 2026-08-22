@@ -32,10 +32,11 @@ ChalSense 是一个面向 JVM 与 Web 应用的自托管人机验证项目，目
 12. [滑块生成器与短时资源](docs/slider-generator.md)：了解素材、图片生成、资源发布、上限和清理边界。
 13. [HTTP API v0.1](docs/http-api.md)：了解已批准的路径、认证、错误、CORS、资源和 Server 实现线。
 14. [公开限流与反向代理](docs/rate-limiting.md)：了解双桶、代理信任、网络标识隐私和失败策略。
-15. [决策记录](docs/decisions/README.md)：区分已批准结论、工作假设和待决策事项。
-16. [技术决策依据](docs/remaining-decisions.md)：了解 D-013～D-018 的选型依据、取舍及 D-014 的条件边界。
-17. [路线图](docs/roadmap.md)：了解分期范围、完成标准和评估指标。
-18. [阶段 0 评审](docs/stage-0-review.md)：了解当前证据、阻塞项和是否允许开始实现。
+15. [可观测性、审计与健康](docs/observability.md)：了解低基数指标、隐私安全日志和管理端口边界。
+16. [决策记录](docs/decisions/README.md)：区分已批准结论、工作假设和待决策事项。
+17. [技术决策依据](docs/remaining-decisions.md)：了解 D-013～D-018 的选型依据、取舍及 D-014 的条件边界。
+18. [路线图](docs/roadmap.md)：了解分期范围、完成标准和评估指标。
+19. [阶段 0 评审](docs/stage-0-review.md)：了解当前证据、阻塞项和是否允许开始实现。
 
 ## 当前阶段的完成标准
 
@@ -52,7 +53,7 @@ Java 根构件为 `io.github.chalsense:chalsense-parent:0.1.0-SNAPSHOT`，当前
 
 `chalsense-store-redis` 依 D-028～D-030、D-034～D-035 使用 Jedis 7.5.3 和池化 `RedisClient`，实现 Redis OSS 7.2.x 与 Valkey 7.2.x standalone 的状态原子消费、短时资源和公开双桶限流。状态与限流结果未知均失败关闭，不回退内存；可能自动重放命令的 `RedisClusterClient` 已延期。
 
-`@chalsense/widget` 依 D-032 实现原生 `<chalsense-widget>`、Canvas/Pointer Events、键盘控制、双语文案、替代验证事件和可注入 transport；D-034 增加官方 `createHttpTransport`。`chalsense-server` 固定 Spring Boot 4.1.1，提供 public/trusted 分离端点、静态站点与 credential 配置、精确 CORS、请求上限、Redis 短时资源、D-035 公开限流和健康探针。成功事件仍只表示取得 ticket；生产部署边界见 [Server 说明](chalsense-server/README.md)。
+`@chalsense/widget` 依 D-032 实现原生 `<chalsense-widget>`、Canvas/Pointer Events、键盘控制、双语文案、替代验证事件和可注入 transport；D-034 增加官方 `createHttpTransport`。`chalsense-server` 固定 Spring Boot 4.1.1，提供 public/trusted 分离端点、静态站点与 credential 配置、精确 CORS、请求上限、Redis 短时资源、D-035 公开限流，以及 D-036 低基数指标、结构化审计和独立 loopback Prometheus 端口。成功事件仍只表示取得 ticket；生产部署边界见 [Server 说明](chalsense-server/README.md)。
 
 Windows：
 

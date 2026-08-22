@@ -2,7 +2,7 @@
 
 ## 文档状态
 
-本文记录已经形成共识的架构方向。详细协议、安全、坐标、前端与生成器规则分别见 `docs/protocol.md`、`docs/threat-model.md`、`docs/coordinates.md`、`docs/widget.md` 和 `docs/slider-generator.md`。阶段 0 已通过评审；公开字段与调用方策略以 D-013～D-018、D-021～D-025 为准，模块与发布坐标以 D-019～D-020 为准，Redis Store 以 D-028～D-030 为准，Widget 以 D-032 为准，生产滑块生成边界以 D-033 为准。
+本文记录已经形成共识的架构方向。详细协议、安全、坐标、前端与生成器规则分别见 `docs/protocol.md`、`docs/threat-model.md`、`docs/coordinates.md`、`docs/widget.md` 和 `docs/slider-generator.md`。阶段 0 已通过评审；公开字段与调用方策略以 D-013～D-018、D-021～D-025 为准，模块与发布坐标以 D-019～D-020 为准，Redis Store 以 D-028～D-030 为准，Widget 以 D-032 为准，生产滑块生成边界以 D-033 为准，可观测性以 D-036 为准。
 
 ## 总体结构
 
@@ -165,6 +165,10 @@ storageVersion 1 的 Core codec、严格 reader、固定 writer 与原子 Store 
 - PoW 计划在 v0.2 评估并实现，实施前必须验证低性能设备、WebView、耗电、Worker、内存不足和算法参数。
 - PoW 只能作为提高批量请求成本的挑战，不得宣称它可以证明用户是人。
 
+## 可观测性边界
+
+D-036 将指标、审计与健康实现限制在 Server 适配层。Core 继续只发出无标识的低基数 `SecurityEvent`，不依赖 Micrometer 或日志框架；Server 将其映射为受控 Counter 与单行 JSON 审计事件。Prometheus 只在独立 loopback management 端口暴露，默认关闭 tracing。完整禁止字段和指标集合见 `docs/observability.md`。
+
 ## 仍需验证的问题
 
-D-013～D-035 已批准上述协议、资源、存储、站点模型、协议词法约束、ticket 摘要输入、调用方/Origin、TTL、Redis Store、不可解码状态语义、Cluster 延期、Widget、生产滑块生成边界、HTTP v0.1 与公开限流/代理信任边界。D-023 冻结了 verify/consume 向量，D-026 独立冻结了 create 补充向量，D-027 冻结了 storageVersion 1 状态 JSON。D-014 确定性原型也已通过并由 Widget Vitest runner 执行。Q-004 的最终经验性容差校准属于 v0.1 发布前门禁；它可以调整 `policyVersion` 和服务端容差，但不得改变整数坐标线协议或把容差交给客户端指定。
+D-013～D-036 已批准上述协议、资源、存储、站点模型、协议词法约束、ticket 摘要输入、调用方/Origin、TTL、Redis Store、不可解码状态语义、Cluster 延期、Widget、生产滑块生成边界、HTTP v0.1、公开限流/代理信任和可观测性边界。D-023 冻结了 verify/consume 向量，D-026 独立冻结了 create 补充向量，D-027 冻结了 storageVersion 1 状态 JSON。D-014 确定性原型也已通过并由 Widget Vitest runner 执行。Q-004 的最终经验性容差校准属于 v0.1 发布前门禁；它可以调整 `policyVersion` 和服务端容差，但不得改变整数坐标线协议或把容差交给客户端指定。

@@ -54,6 +54,7 @@ class ServerHttpIntegrationTest {
     private static HttpClient http;
     private static URI firstBase;
     private static URI secondBase;
+    private static URI managementBase;
     private static String redisUri;
 
     @BeforeAll
@@ -73,6 +74,7 @@ class ServerHttpIntegrationTest {
         second = start(properties);
         firstBase = base(first);
         secondBase = base(second);
+        managementBase = managementBase(first);
         http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
     }
 
@@ -153,6 +155,18 @@ class ServerHttpIntegrationTest {
         long retryAfter = Long.parseLong(limited.headers().firstValue("Retry-After").orElseThrow());
         assertTrue(retryAfter >= 1 && retryAfter <= 60);
         assertTrue(text(limited).contains("RATE_LIMITED"));
+
+        HttpResponse<byte[]> metrics = get(managementBase, "/actuator/prometheus");
+        assertEquals(200, metrics.statusCode());
+        String prometheus = text(metrics);
+        assertTrue(prometheus.contains("chalsense_requests_total"));
+        assertTrue(prometheus.contains("operation=\"challenge_create\""));
+        assertFalse(prometheus.contains("http_server_requests"));
+        assertFalse(prometheus.contains("jvm_"));
+        assertFalse(prometheus.contains(SITE_KEY));
+        assertFalse(prometheus.contains(challengeId));
+        assertFalse(prometheus.contains(ticket));
+        assertEquals(404, get(firstBase, "/actuator/prometheus").statusCode());
     }
 
     private static ConfigurableApplicationContext start(Map<String, Object> properties) {
@@ -165,6 +179,7 @@ class ServerHttpIntegrationTest {
         return Map.ofEntries(
                 Map.entry("spring.main.banner-mode", "off"),
                 Map.entry("logging.level.root", "WARN"),
+                Map.entry("management.server.port", "0"),
                 Map.entry("chalsense.redis-uri", redisUri),
                 Map.entry("chalsense.redis-namespace", keyspace.namespace()),
                 Map.entry("chalsense.background-directory", imageDirectory.toString()),
@@ -184,6 +199,11 @@ class ServerHttpIntegrationTest {
 
     private static URI base(ConfigurableApplicationContext context) {
         int port = Integer.parseInt(context.getEnvironment().getProperty("local.server.port"));
+        return URI.create("http://127.0.0.1:" + port);
+    }
+
+    private static URI managementBase(ConfigurableApplicationContext context) {
+        int port = Integer.parseInt(context.getEnvironment().getProperty("local.management.port"));
         return URI.create("http://127.0.0.1:" + port);
     }
 

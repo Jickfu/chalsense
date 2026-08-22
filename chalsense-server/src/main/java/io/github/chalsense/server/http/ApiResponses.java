@@ -10,6 +10,6 @@ final class ApiResponses {
     static ResponseEntity<ApiError> error(int status, String code) {
         return ResponseEntity.status(status)
                 .cacheControl(CacheControl.noStore())
-                .body(new ApiError("1", new ApiError.ErrorDetail(code, RequestIds.next())));
+                .body(new ApiError("1", new ApiError.ErrorDetail(code, RequestIds.currentOrNext())));
     }
 }

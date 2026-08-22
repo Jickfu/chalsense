@@ -265,6 +265,16 @@
 - 结论：默认只信任 TCP 直连地址。只有直连 peer 位于显式 `trustedProxyCidrs` 时才从右向左解析并剥离 `X-Forwarded-For` 中的可信代理；畸形或歧义输入前置拒绝。IPv4 使用完整地址，IPv6 归一到 `/64`，再使用部署方 32 字节 HMAC key 生成 128 位不透明 client key；Redis、日志和指标不得保存原始 IP，也不得与轨迹组合成设备指纹。
 - 原因：双桶限制同时控制单一来源和站点总容量；原子判定避免部分扣减与多实例竞态；显式代理信任阻止伪造 forwarded header 绕过；HMAC 和短 TTL 在保留滥用控制能力的同时降低网络标识长期泄露风险。
 
+### D-036 可观测性、审计与管理端口边界
+
+- 日期：2026-08-22
+- 状态：已批准。
+- 结论：指标和审计只使用固定低基数 `operation`、`outcome`、`reason` 以及服务端生成的单请求 `requestId`。不得记录或标记 `siteKey`、action、Origin、IP/clientKey、challengeId、ticket、contextDigest、坐标、轨迹、答案、Authorization、请求体或资源 URL；默认不启用 tracing 或设备遥测。
+- 结论：`chalsense-server` 使用 Spring Boot Actuator、Micrometer 和 Prometheus registry；依赖不得进入 Core。Prometheus 只通过默认监听 `127.0.0.1` 的独立 management 端口暴露，且只开放 `/actuator/prometheus`。`/livez` 仍只表示进程存活，`/readyz` 只返回 Redis 必要依赖的汇总状态。
+- 结论：观测输出是非阻塞旁路；日志或指标失败不得改变、恢复或重试 challenge/ticket 状态操作。外部代理、APM 和日志平台的访问控制、脱敏与保留期仍是部署责任。
+- 依赖审查：Actuator、Micrometer 与 Prometheus registry 由 Spring Boot 4.1.1 BOM 管理，许可证为 Apache-2.0 且处于活跃维护状态。替代方案是自建指标格式与 registry，但会增加并发、格式和生态兼容风险。
+- 原因：提供容量、故障和攻击回归信号，同时阻止高基数标签、bearer 数据和行为轨迹进入长期观测系统；独立 loopback 管理端口避免把运维数据加入公开业务授权面。
+
 ## 工作假设
 
 ### A-002 生产存储

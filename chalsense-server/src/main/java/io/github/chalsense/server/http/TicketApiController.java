@@ -43,7 +43,8 @@ public final class TicketApiController {
         if (origin != null || !authenticator.authenticate(parsedSiteKey, authorization, clock.millis())) {
             return ResponseEntity.status(401).header(HttpHeaders.WWW_AUTHENTICATE, "Bearer")
                     .cacheControl(CacheControl.noStore())
-                    .body(new ApiError("1", new ApiError.ErrorDetail("CALLER_UNAUTHORIZED", RequestIds.next())));
+                    .body(new ApiError("1", new ApiError.ErrorDetail(
+                            "CALLER_UNAUTHORIZED", RequestIds.currentOrNext())));
         }
         if (!"1".equals(request.protocolVersion())) throw new IllegalArgumentException("unsupported protocolVersion");
         ConsumeResult result = consumer.consume(new ConsumeTicketCommand(

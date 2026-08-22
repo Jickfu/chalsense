@@ -6,7 +6,6 @@ import io.github.chalsense.core.challenge.ChallengeCreator;
 import io.github.chalsense.core.challenge.slider.BackgroundImageSource;
 import io.github.chalsense.core.challenge.slider.BoundedRandom;
 import io.github.chalsense.core.challenge.slider.SliderPuzzleGenerator;
-import io.github.chalsense.core.security.SecurityEventSink;
 import io.github.chalsense.core.ratelimit.RateLimiter;
 import io.github.chalsense.core.site.SitePolicy;
 import io.github.chalsense.core.site.SiteRegistration;
@@ -19,10 +18,12 @@ import io.github.chalsense.protocol.ActionName;
 import io.github.chalsense.protocol.SiteKey;
 import io.github.chalsense.server.security.ServiceCredentialAuthenticator;
 import io.github.chalsense.server.security.StaticServiceCredentialAuthenticator;
+import io.github.chalsense.server.observability.ServerObservability;
 import io.github.chalsense.store.redis.JedisStateStore;
 import io.github.chalsense.store.redis.RedisChallengeResourceStore;
 import io.github.chalsense.store.redis.RedisKeyspace;
 import io.github.chalsense.store.redis.RedisRateLimiter;
+import io.micrometer.core.instrument.config.MeterFilter;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,6 +42,11 @@ import java.net.InetAddress;
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(ChalSenseServerProperties.class)
 public class ServerConfiguration {
+    @Bean
+    MeterFilter chalsenseMetersOnly() {
+        return MeterFilter.denyUnless(id -> id.getName().startsWith("chalsense."));
+    }
+
     @Bean(destroyMethod = "close")
     RedisClient redisClient(ChalSenseServerProperties properties) {
         URI uri = URI.create(properties.getRedisUri());
@@ -133,18 +139,20 @@ public class ServerConfiguration {
 
     @Bean
     ChallengeCreator challengeCreator(StateStore store, SiteRegistry sites, Clock clock,
-            TokenGenerator tokens, SliderPuzzleGenerator generator) {
-        return new ChallengeCreator(store, sites, clock, tokens, generator, SecurityEventSink.noop());
+            TokenGenerator tokens, SliderPuzzleGenerator generator, ServerObservability observability) {
+        return new ChallengeCreator(store, sites, clock, tokens, generator, observability);
     }
 
     @Bean
-    ChallengeVerifier challengeVerifier(StateStore store, SiteRegistry sites, Clock clock, TokenGenerator tokens) {
-        return new ChallengeVerifier(store, sites, clock, tokens, SecurityEventSink.noop());
+    ChallengeVerifier challengeVerifier(StateStore store, SiteRegistry sites, Clock clock, TokenGenerator tokens,
+            ServerObservability observability) {
+        return new ChallengeVerifier(store, sites, clock, tokens, observability);
     }
 
     @Bean
-    TicketConsumer ticketConsumer(StateStore store, SiteRegistry sites, Clock clock) {
-        return new TicketConsumer(store, sites, clock, SecurityEventSink.noop());
+    TicketConsumer ticketConsumer(StateStore store, SiteRegistry sites, Clock clock,
+            ServerObservability observability) {
+        return new TicketConsumer(store, sites, clock, observability);
     }
 
     @Bean

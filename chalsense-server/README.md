@@ -45,6 +45,23 @@ chalsense:
 
 公网绑定前必须启用内建限流；否则非 loopback `server.address` 会令启动失败。`rate-limit.hmac-key` 是独立的 32 字节随机 secret，不得复用 service credential。上述限额只是保守示例，并非适用于所有部署的安全阈值。代理信任、IPv6 `/64` 和 HMAC 隐私规则见 [限流规范](../docs/rate-limiting.md)；[Nginx 示例](../deploy/nginx/chalsense.conf.example)只是一份需按实际 TLS、网络和容量复核的基线，不是可直接复制的生产保证。
 
+## 指标、审计与健康
+
+D-036 默认在独立的 `127.0.0.1:9090` management 端口只暴露 `/actuator/prometheus`；业务端口不暴露 Actuator。容器或多实例部署必须为 management 端口配置本机采集器、受控监控网络或认证代理，不得直接暴露到公网。端口可用标准 Spring Boot 配置覆盖：
+
+```yaml
+management:
+  server:
+    address: 127.0.0.1
+    port: 9090
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
+```
+
+指标只含固定 `operation/outcome/reason` 标签。审计 logger `io.github.chalsense.audit` 输出单行 JSON 消息；不得配置外部 access log、APM 或代理记录请求体、Authorization、动态资源 URL、`challengeId`、ticket、`contextDigest`、轨迹、IP 或限流 client key。`/livez` 不访问 Redis，`/readyz` 只返回 Redis 必要依赖的汇总 UP/DOWN。完整边界见[可观测性规范](../docs/observability.md)。
+
 ## 安全边界
 
 - 公共端点只对站点精确允许的 Origin 返回无 credential CORS。

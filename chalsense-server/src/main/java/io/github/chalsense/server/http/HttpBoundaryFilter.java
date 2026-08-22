@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 import java.util.Locale;
 
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
+@Order(Ordered.HIGHEST_PRECEDENCE + 1)
 public final class HttpBoundaryFilter extends OncePerRequestFilter {
     private static final Pattern PUBLIC_SITE = Pattern.compile("/v1/public/sites/([A-Za-z0-9_-]{8,64})/.*");
     private final SiteRegistry sites;
@@ -114,7 +114,7 @@ public final class HttpBoundaryFilter extends OncePerRequestFilter {
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setHeader("Cache-Control", "no-store");
         response.getWriter().write("{\"protocolVersion\":\"1\",\"error\":{\"code\":\"" + code
-                + "\",\"requestId\":\"" + RequestIds.next() + "\"}}");
+                + "\",\"requestId\":\"" + RequestIds.currentOrNext() + "\"}}");
     }
 
     private static final class BufferedRequest extends HttpServletRequestWrapper {

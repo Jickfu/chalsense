@@ -159,6 +159,8 @@ Server 默认监听 `127.0.0.1`；内建限流未启用时配置非 loopback 地
 
 首个纵向切片只提供 readiness/liveness、静态站点配置和上述四类端点，不提供管理后台、动态注册、Swagger UI、用户会话、设备指纹、遥测 SDK 或额外验证类型。
 
+D-036 在独立、默认仅监听 loopback 的 management 端口提供 `/actuator/prometheus`，不改变本文件冻结的业务端点，也不在业务端口暴露 Actuator。指标、审计禁止字段和 tracing 默认值见 `docs/observability.md`。
+
 ## 需要批准的兼容性结论
 
 批准本文意味着冻结以下 v0.1 基线：路径与 path/body 字段分工、200/409/422 等状态码、严格 JSON 与 body 上限、CORS 规则、`Bearer keyId.secret`、Redis hash + Lua 资源存储，以及 Spring Boot 4.1 Servlet 实现线。之后改变这些内容必须记录替代决策；具体 patch 依赖升级可在兼容范围内经过依赖审查后进行。

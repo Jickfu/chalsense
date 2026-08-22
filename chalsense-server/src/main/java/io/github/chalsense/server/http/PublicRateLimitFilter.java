@@ -25,7 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE + 1)
+@Order(Ordered.HIGHEST_PRECEDENCE + 2)
 public final class PublicRateLimitFilter extends OncePerRequestFilter {
     private static final Pattern CREATE = Pattern.compile("/v1/public/sites/([A-Za-z0-9_-]{8,64})/challenges");
     private static final Pattern VERIFY = Pattern.compile(
@@ -110,7 +110,7 @@ public final class PublicRateLimitFilter extends OncePerRequestFilter {
         response.setHeader("Cache-Control", "no-store");
         if (retryAfter != null) response.setHeader("Retry-After", Long.toString(retryAfter));
         response.getWriter().write("{\"protocolVersion\":\"1\",\"error\":{\"code\":\"" + code
-                + "\",\"requestId\":\"" + RequestIds.next() + "\"}}");
+                + "\",\"requestId\":\"" + RequestIds.currentOrNext() + "\"}}");
     }
 
     private record Target(String siteKey, RateLimitOperation operation) {}
