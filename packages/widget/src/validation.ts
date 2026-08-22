@@ -69,9 +69,10 @@ function resourceUrlAccepted(raw: string): boolean {
   if (raw.length === 0 || raw.length > 2048 || /[\u0000-\u001f\u007f]/u.test(raw)) return false;
   if (raw.startsWith("//") || raw.startsWith("\\\\")) return false;
   try {
-    const absolute = new URL(raw, document.baseURI);
+    const isAbsolute = /^[A-Za-z][A-Za-z0-9+.-]*:/u.test(raw);
+    const absolute = isAbsolute ? new URL(raw) : new URL(raw, document.baseURI);
     if (absolute.username || absolute.password || absolute.hash) return false;
-    if (/^[A-Za-z][A-Za-z0-9+.-]*:/u.test(raw)) return absolute.protocol === "https:";
+    if (isAbsolute) return absolute.protocol === "https:";
     return (absolute.protocol === "https:" || absolute.protocol === "http:")
       && absolute.origin === document.location.origin;
   } catch {

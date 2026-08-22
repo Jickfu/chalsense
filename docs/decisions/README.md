@@ -247,6 +247,15 @@
 - 安全修订：资源清理必须接收本次 `publish` 返回的完整资源引用集合，不得只按 `challengeId` 推导删除目标。原因是挑战 ID 碰撞时，按 ID 清理可能误删既有挑战资源；publisher 生成的独立资源标识才是本次发布的精确所有权边界。
 - 原因：用 JDK 能力先建立可测试、无框架的生成边界，同时避免把素材来源、HTTP 路径或特定对象存储耦合进 Core；整包发布、失败清理与硬 TTL 限制资源泄漏和半成功挑战。
 
+### D-034 HTTP API v0.1 与独立服务实现线
+
+- 日期：2026-08-22
+- 状态：已批准。
+- 结论：冻结 `docs/http-api.md` 的 `/v1/public` 与 `/v1/trusted` 分离路径、path 中的 `siteKey/challengeId`、严格请求 JSON、固定 body 上限、200/409/422 等状态码、精确无 credential CORS，以及 `Authorization: Bearer <keyId>.<secret>` service credential 承载。HTTP 适配层只能调用 Core，不复制状态机或接受客户端声明 trusted。
+- 结论：`chalsense-server` 使用 Spring Boot 4.1.x Servlet 栈并固定 patch 版本，依赖不得进入 Protocol、Core、Redis Store 或 Widget。首个纵向切片不引入 Spring Security、Spring Data Redis、ORM、模板、管理后台或响应式栈；在内建公开限流完成前默认只监听 loopback，公网试用必须由反向代理提供 TLS、速率/并发限制和请求上限。
+- 结论：Redis 短时资源使用独立 128 位 `resourceId`、单 hash key 与 Lua 原子完成不存在检查、两个资源和绝对 TTL 写入；读取不消费，结果未知不返回 URL，不回退内存。资源 ID 不复用 `challengeId`，清理只针对本次 publish 返回的资源集合。
+- 原因：path `siteKey` 让 CORS preflight 可在不读取 body 时应用站点策略；分离授权面阻止调用方类型混淆；成熟 Servlet 容器减少自制 HTTP 边界；Redis 原子资源包让多实例读取与 challenge 生命周期一致。
+
 ## 工作假设
 
 ### A-002 生产存储
@@ -258,12 +267,6 @@
 - 使用 TypeScript、Web Component、Canvas 和 Pointer Events，框架适配包后置。
 
 ## 待决策
-
-### Q-010 HTTP API v0.1 与独立服务实现线
-
-- 状态：推荐方案已形成，等待项目所有者批准后记录为 D-034；批准前不得创建 `chalsense-server` 或冻结公开 HTTP API。
-- 推荐：采用 `docs/http-api.md` 的 `/v1/public` 与 `/v1/trusted` 分离路径、path 中的 `siteKey/challengeId`、严格 JSON、固定错误状态码、精确无 credential CORS、`Authorization: Bearer keyId.secret`、Redis hash + Lua 短时资源，以及仅进入 Server 的 Spring Boot 4.1 Servlet 栈。
-- 影响：路径、JSON 映射、认证承载、状态码和 CORS 一旦被其他语言客户端或 Widget adapter 使用，就形成协议兼容面；资源存储选择影响多实例一致性和 Redis 容量。
 
 ### Q-004 坐标与容差规范
 

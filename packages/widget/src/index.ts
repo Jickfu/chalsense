@@ -1,4 +1,6 @@
 export { ChalSenseWidget } from "./chalsense-widget.js";
+export { createHttpTransport } from "./http-transport.js";
+export type { HttpTransportConfiguration } from "./http-transport.js";
 export {
   COORDINATE_SCALE,
   MAX_DPR,

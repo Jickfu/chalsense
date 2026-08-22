@@ -23,6 +23,9 @@ class RedisKeyspaceTest {
                         + "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
                 ascii(keyspace.ticketKey(new TicketDigest(
                         "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"))));
+        assertEquals(
+                "chalsense.prod:v1:resource:{AAAAAAAAAAAAAAAAAAAAAA}",
+                ascii(keyspace.resourceKey("AAAAAAAAAAAAAAAAAAAAAA")));
     }
 
     @Test
@@ -33,6 +36,8 @@ class RedisKeyspaceTest {
         assertThrows(IllegalArgumentException.class, () -> new RedisKeyspace("{chalsense}"));
         assertThrows(IllegalArgumentException.class, () -> new RedisKeyspace("测试"));
         assertThrows(IllegalArgumentException.class, () -> new RedisKeyspace("a".repeat(65)));
+        assertThrows(IllegalArgumentException.class,
+                () -> new RedisKeyspace().resourceKey("BBBBBBBBBBBBBBBBBBBBBB"));
     }
 
     private static String ascii(byte[] value) {

@@ -16,6 +16,10 @@
     "./coordinate": {
       "types": "./dist/coordinate.d.ts",
       "import": "./dist/coordinate.js"
+    },
+    "./http-transport": {
+      "types": "./dist/http-transport.d.ts",
+      "import": "./dist/http-transport.js"
     }
   },
   "engines": {

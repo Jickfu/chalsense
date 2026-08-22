@@ -3,7 +3,7 @@
 ## 文档状态
 
 - **已批准决策：** D-014 固定坐标与 Pointer Events 语义，D-015 固定资源交付，D-032 固定 Widget 工具链、公开边界与无障碍基线。
-- **实现事实：** `packages/widget` 已实现 `@chalsense/widget` 0.1.0 和 `<chalsense-widget>`，无运行时依赖；HTTP Server 尚未实现。
+- **实现事实：** `packages/widget` 已实现 `@chalsense/widget` 0.1.0、`<chalsense-widget>` 和 D-034 的官方 HTTP transport，无运行时依赖。
 - **安全前提：** 浏览器、组件、资源、坐标、轨迹、时间戳和全部 DOM 事件都是不可信输入。Widget 只改善一致性与体验，不证明用户一定是真人。
 
 ## 工具链
@@ -51,7 +51,13 @@ interface ChalSenseTransport {
 }
 ```
 
-transport 由接入方或未来官方 HTTP adapter 提供。Widget 不拼接 URL、不持有 service credential、不调用 ticket consume，也不冻结 HTTP 路径、状态码、认证或 CORS。
+默认仍由接入方显式注入 transport；官方 `createHttpTransport({ baseUrl })` 按 D-034 拼接冻结 public 路径，使用 `credentials: "omit"` 且不自动重试，并严格验证成功响应。Widget 不持有 service credential，也不调用 ticket consume。
+
+```ts
+import { createHttpTransport } from "@chalsense/widget/http-transport";
+
+const transport = createHttpTransport({ baseUrl: "https://verify.example.com" });
+```
 
 ## 事件
 

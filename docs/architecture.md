@@ -42,7 +42,7 @@ TypeScript Web Component
 
 首版不应为了模块名整齐拆出没有独立职责的空模块。最终拆分要服从依赖边界和发布需要。
 
-当前 Maven 依赖方向为 `chalsense-store-redis → chalsense-core → chalsense-protocol`。`chalsense-protocol` 不含生产依赖，`chalsense-core` 与 Redis Store 均不依赖 Spring。`@chalsense/widget` 已作为独立 npm workspace 建立，不依赖 Java 模块或 UI 框架，通过协议类型和冻结坐标向量保持一致；Starter、Server 与 Testkit 在出现真实职责和相应测试时再建立。
+当前 Maven 依赖方向为 `chalsense-server → chalsense-store-redis → chalsense-core → chalsense-protocol`。`chalsense-protocol` 不含生产依赖，`chalsense-core` 与 Redis Store 均不依赖 Spring；Spring Boot 只存在于 Server 适配层。`@chalsense/widget` 是独立 npm workspace，不依赖 Java 模块或 UI 框架，通过协议类型和冻结坐标向量保持一致；Starter 与 Testkit 仍等待真实职责和相应测试。
 
 ## 协议概览
 
@@ -70,7 +70,7 @@ TypeScript Web Component
 - 客户端成功事件只表示组件拿到票据，不代表业务请求已获准。
 - 票据格式可以是服务端状态型随机令牌或签名令牌，但只要要求单次使用，就仍需服务端原子消费状态。
 
-D-013、D-014、D-022 已批准使用状态型 256 位随机 token、`SHA-256(rawTicketBytes)` Redis 查找摘要、先原子取走再校验、结果未知失败关闭，以及整数规范化坐标。以 `docs/protocol.md`、`docs/coordinates.md` 和机器向量为准；最终 HTTP 路径与构件 API 尚不是已发布接口。
+D-013、D-014、D-022 已批准使用状态型 256 位随机 token、`SHA-256(rawTicketBytes)` Redis 查找摘要、先原子取走再校验、结果未知失败关闭，以及整数规范化坐标。以 `docs/protocol.md`、`docs/coordinates.md` 和机器向量为准；D-034 已冻结 HTTP v0.1 基线，但 `0.x` 构件尚未作 v1.0 稳定性承诺。
 
 ### 票据消费拓扑
 
@@ -167,4 +167,4 @@ storageVersion 1 的 Core codec、严格 reader、固定 writer 与原子 Store 
 
 ## 仍需验证的问题
 
-D-013～D-018 与 D-021～D-033 已批准上述协议、资源、存储、站点模型、协议词法约束、ticket 摘要输入、调用方/Origin、TTL、Redis Store、不可解码状态语义、Cluster 延期、Widget 和生产滑块生成边界；D-023 冻结了 verify/consume 向量，D-026 独立冻结了 create 补充向量，D-027 冻结了 storageVersion 1 状态 JSON。D-014 确定性原型也已通过并由 Widget Vitest runner 执行。Q-010 正等待项目所有者批准 HTTP 路径、认证、错误、CORS、Redis 资源和 Server 技术栈，批准前 `docs/http-api.md` 只是推荐草案。Q-004 的最终经验性容差校准属于 v0.1 发布前门禁；它可以调整 `policyVersion` 和服务端容差，但不得改变整数坐标线协议或把容差交给客户端指定。
+D-013～D-034 已批准上述协议、资源、存储、站点模型、协议词法约束、ticket 摘要输入、调用方/Origin、TTL、Redis Store、不可解码状态语义、Cluster 延期、Widget、生产滑块生成边界与 HTTP v0.1。D-023 冻结了 verify/consume 向量，D-026 独立冻结了 create 补充向量，D-027 冻结了 storageVersion 1 状态 JSON。D-014 确定性原型也已通过并由 Widget Vitest runner 执行。Q-004 的最终经验性容差校准属于 v0.1 发布前门禁；它可以调整 `policyVersion` 和服务端容差，但不得改变整数坐标线协议或把容差交给客户端指定。

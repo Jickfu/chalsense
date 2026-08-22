@@ -5,6 +5,7 @@ import io.github.chalsense.protocol.ChallengeId;
 import io.github.chalsense.protocol.SiteKey;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -44,6 +45,24 @@ public final class RedisKeyspace {
     public byte[] ticketKey(TicketDigest ticketDigest) {
         Objects.requireNonNull(ticketDigest, "ticketDigest");
         return ascii(namespace + ":" + KEY_SCHEMA_VERSION + ":ticket:" + ticketDigest.hexValue());
+    }
+
+    public byte[] resourceKey(String resourceId) {
+        Objects.requireNonNull(resourceId, "resourceId");
+        if (!resourceId.matches("[A-Za-z0-9_-]{22}") || !isCanonical128Bit(resourceId)) {
+            throw new IllegalArgumentException("resourceId must be a canonical 128-bit Base64url value");
+        }
+        return ascii(namespace + ":" + KEY_SCHEMA_VERSION + ":resource:{" + resourceId + "}");
+    }
+
+    private static boolean isCanonical128Bit(String value) {
+        try {
+            byte[] decoded = Base64.getUrlDecoder().decode(value);
+            return decoded.length == 16
+                    && Base64.getUrlEncoder().withoutPadding().encodeToString(decoded).equals(value);
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
     }
 
     private static byte[] ascii(String value) {

@@ -30,7 +30,7 @@ ChalSense 是一个面向 JVM 与 Web 应用的自托管人机验证项目，目
 10. [Redis / Valkey Store 设计](docs/redis-store-design.md)：了解客户端依赖、key、命令、TTL、故障映射与集成测试拓扑。
 11. [Widget 设计与测试](docs/widget.md)：了解 Web Component API、transport、渲染、交互、无障碍和浏览器测试边界。
 12. [滑块生成器与短时资源](docs/slider-generator.md)：了解素材、图片生成、资源发布、上限和清理边界。
-13. [HTTP API v0.1 草案](docs/http-api.md)：了解待批准的路径、认证、错误、CORS、资源和 Server 实现线。
+13. [HTTP API v0.1](docs/http-api.md)：了解已批准的路径、认证、错误、CORS、资源和 Server 实现线。
 14. [决策记录](docs/decisions/README.md)：区分已批准结论、工作假设和待决策事项。
 15. [技术决策依据](docs/remaining-decisions.md)：了解 D-013～D-018 的选型依据、取舍及 D-014 的条件边界。
 16. [路线图](docs/roadmap.md)：了解分期范围、完成标准和评估指标。
@@ -45,13 +45,13 @@ ChalSense 是一个面向 JVM 与 Web 应用的自托管人机验证项目，目
 
 ## 当前构建基线
 
-Java 根构件为 `io.github.chalsense:chalsense-parent:0.1.0-SNAPSHOT`，当前包含 `chalsense-protocol`、`chalsense-core` 与 `chalsense-store-redis`。生产代码以 Java 17 字节码发布，Core 与 Redis Store 均不依赖 Spring；测试在构建时直接执行冻结坐标、协议和状态序列化向量。npm workspace 当前包含无运行时依赖的 `@chalsense/widget`。
+Java 根构件为 `io.github.chalsense:chalsense-parent:0.1.0-SNAPSHOT`，当前包含 `chalsense-protocol`、`chalsense-core`、`chalsense-store-redis` 与薄 `chalsense-server`。生产代码以 Java 17 字节码发布，Core 与 Redis Store 均不依赖 Spring；测试在构建时直接执行冻结坐标、协议和状态序列化向量。npm workspace 当前包含无运行时依赖的 `@chalsense/widget`。
 
 当前 Core 已实现 framework-independent 的 challenge 创建、单次验证、ticket 签发与单次消费状态机，以及可注入 `Clock`、CSPRNG token 生成器、`ChallengeGenerator`、`SiteRegistry`、`StateStore` SPI 和隐私最小化安全事件。D-033 增加了只依赖 JDK 的生产滑块 PNG 生成器、受控背景来源 SPI、短时资源发布 SPI、硬资源上限和失败清理；仓库仍不内置来源不明的生产素材或多实例资源存储。创建流程只有在 challenge 原子落库已确认后才返回公开几何和两个资源引用；目标位置与容差不进入公开结果。Core 还提供无运行时依赖的严格状态 JSON codec，其逐字节 golden vectors 已由 D-027 冻结。
 
 `chalsense-store-redis` 依 D-028～D-030 使用 Jedis 7.5.3、池化 `RedisClient`、二进制 `SET NX PXAT` / `GETDEL`，实现 Redis OSS 7.2.x 与 Valkey 7.2.x standalone 的单 key 原子存储、硬 TTL、故障结果映射和不可解码状态的失败关闭。可能在连接异常后自动重放命令的 `RedisClusterClient` 已延期，不属于当前兼容范围。
 
-`@chalsense/widget` 依 D-032 实现原生 `<chalsense-widget>`、Canvas/Pointer Events、键盘控制、双语文案、替代验证事件和可注入 transport。fixture/demo 使用本地程序生成图片，不固定 HTTP 路径；成功事件只表示取得 ticket。测试用内存 State Store 只存在于测试源码；尚未创建 HTTP、Spring 或具体多实例资源存储适配器。
+`@chalsense/widget` 依 D-032 实现原生 `<chalsense-widget>`、Canvas/Pointer Events、键盘控制、双语文案、替代验证事件和可注入 transport；D-034 增加官方 `createHttpTransport`。`chalsense-server` 固定 Spring Boot 4.1.1，提供 public/trusted 分离端点、静态站点与 credential 配置、精确 CORS、请求上限、Redis 短时资源和健康探针。成功事件仍只表示取得 ticket；生产部署边界见 [Server 说明](chalsense-server/README.md)。
 
 Windows：
 
@@ -72,4 +72,4 @@ npm ci
 npm run verify:widget
 ```
 
-Maven Wrapper 固定 Maven 3.9.16，并校验官方分发包的 SHA-256。普通 Maven 构建执行全部纯 Java 测试；Widget 使用 npm lockfile、TypeScript、Vitest 与 Playwright。CI 另在 Java 17/21 上对 Redis 7.2.14 与 Valkey 7.2.14 执行同一组 Store 集成测试，并在 Node.js 24/Chromium 上验证 Widget。生产图片生成、HTTP、Starter 与官网尚不在当前实现范围内。
+Maven Wrapper 固定 Maven 3.9.16，并校验官方分发包的 SHA-256。普通 Maven 构建执行 Java 与 Server 边界测试；Widget 使用 npm lockfile、TypeScript、Vitest 与 Playwright。CI 另在 Java 17/21 上对 Redis 7.2.14 与 Valkey 7.2.14 执行同一组 Store 集成测试，并在 Node.js 24/Chromium 上验证 Widget。官网、Starter、容器发布和动态管理能力尚不在当前实现范围内。
