@@ -41,3 +41,16 @@ chalsense:
 - 资源存入 Redis 单 hash，并由 Lua 原子写入和 `PEXPIREAT` 设置硬过期；读取可重复，challenge 与 ticket 仍只能消费一次。
 - 客户端、坐标、轨迹、时间戳和成功事件均不可信。取得 ticket 不等于业务授权，更不单独证明用户一定是真人。
 - 默认不采集设备指纹。
+
+## 端到端集成测试
+
+普通 `mvn test` 不要求本机安装 Redis。对专用测试实例显式启用后，测试会启动两个随机 HTTP 端口的 Server，共享一个随机 Redis namespace，完整执行 create、跨实例资源重复读取、并发 verify、并发 consume 和再次重放。并发路径必须各自只有一次返回 200，其余返回 409。
+
+```text
+./mvnw -pl chalsense-server -am \
+  -Dchalsense.server.integration=true \
+  -Dchalsense.redis.host=127.0.0.1 \
+  -Dchalsense.redis.port=6379 test
+```
+
+需要 ACL/TLS 时可改传 `-Dchalsense.redis.uri=rediss://...`。URI 可能含凭据，不得写入仓库、命令输出或 CI 日志。GitHub Actions 会在 Java 17/21 上分别对 Redis OSS 7.2.14 和 Valkey 7.2.14 执行该测试；fixture 图片由测试代码在临时目录生成，不使用第三方素材。

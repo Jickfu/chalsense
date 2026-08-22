@@ -102,20 +102,22 @@ jobs:
           java-version: ${{ matrix.java }}
           cache: maven
 
-      - name: Test Redis OSS 7.2.14
+      - name: Test Redis OSS 7.2.14 Store and HTTP flow
         run: >-
           bash ./mvnw --batch-mode --no-transfer-progress
-          -pl chalsense-store-redis -am
+          -pl chalsense-server -am
           -Dchalsense.redis.integration=true
+          -Dchalsense.server.integration=true
           -Dchalsense.redis.host=127.0.0.1
           -Dchalsense.redis.port=6379
           test
 
-      - name: Test Valkey 7.2.14
+      - name: Test Valkey 7.2.14 Store and HTTP flow
         run: >-
           bash ./mvnw --batch-mode --no-transfer-progress
-          -pl chalsense-store-redis -am
+          -pl chalsense-server -am
           -Dchalsense.redis.integration=true
+          -Dchalsense.server.integration=true
           -Dchalsense.redis.host=127.0.0.1
           -Dchalsense.redis.port=6380
           test

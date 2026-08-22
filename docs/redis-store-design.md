@@ -122,7 +122,7 @@ D-028 固定：
 | 17、21 | `redis:7.2.14` |
 | 17、21 | `valkey/valkey:7.2.14` |
 
-两个服务端执行同一测试：create/take、TTL、并发、错误类型、损坏 JSON、跨实例消费和 key 隔离。镜像固定完整 patch tag；升级前查看安全公告并重新执行矩阵。Redis 7.2.14 和 Valkey 7.2.14 是截至调研日期 Docker 官方/项目镜像提供的安全 patch 标签。
+两个服务端执行同一 Store 测试：create/take、TTL、并发、错误类型、损坏 JSON、跨实例消费和 key 隔离；同时执行两个真实 HTTP Server 共享随机 namespace 的 create、跨实例资源重复读取、并发 verify、并发 consume 与重放测试。镜像固定完整 patch tag；升级前查看安全公告并重新执行矩阵。Redis 7.2.14 和 Valkey 7.2.14 是截至调研日期 Docker 官方/项目镜像提供的安全 patch 标签。
 
 本地环境当前没有 Docker 命令，因此真实服务端集成测试在 CI 和具备 Redis/Valkey 的开发机执行；本机仍执行全部纯 Java 合约测试。连接失败和响应丢失的结果映射已由命令网关故障注入测试覆盖，且断言同一操作只调用一次；真实网络分区与故障切换仍属于部署级后续测试，不以自动重试“修复”。
 
@@ -131,6 +131,6 @@ D-028 固定：
 1. 已创建 `chalsense-store-redis`，生产只提供基于池化 `RedisClient` 的 Jedis standalone 客户端实现，不依赖 Spring。
 2. 已实现固定 key schema、冻结二进制 value、`SET NX PXAT` / `GETDEL` 与异常映射。
 3. 已实现 `TakeResult.Unreadable` 以及 Core 的失败关闭和低基数安全事件映射。
-4. 已配置 CI 在 Java 17/21 上对 Redis 7.2.14 与 Valkey 7.2.14 执行相同集成测试。
+4. 已配置 CI 在 Java 17/21 上对 Redis 7.2.14 与 Valkey 7.2.14 执行相同 Store 与 HTTP 端到端集成测试。
 5. 本地 JDK 17/21 纯 Java 构建必须通过；真实服务端矩阵的最终证据以 CI 运行结果为准。
 6. Redis Cluster 入口依 D-030 延期，不属于当前已实现兼容范围。
