@@ -131,12 +131,15 @@ class ChallengeCreatorTest {
         store.challengeStoreResult(StoreChallengeResult.UNKNOWN);
         AtomicInteger generatorCalls = new AtomicInteger();
 
-        CreateResult result = creator(store, activeRegistry(), tokens(ID_A, ID_B), generator(generatorCalls))
+        AtomicInteger discardCalls = new AtomicInteger();
+        ChallengeGenerator generator = trackingGenerator(generatorCalls, discardCalls);
+        CreateResult result = creator(store, activeRegistry(), tokens(ID_A, ID_B), generator)
                 .create(command(LOGIN, CallerContext.trustedBackend()));
 
         assertEquals(CreateOutcome.DEPENDENCY_UNAVAILABLE, result.outcome());
         assertFalse(result.challenge().isPresent());
         assertEquals(1, generatorCalls.get());
+        assertEquals(1, discardCalls.get());
         assertEquals(1, store.challengeStoreCalls());
     }
 
@@ -201,6 +204,23 @@ class ChallengeCreatorTest {
         return request -> {
             calls.incrementAndGet();
             return generated();
+        };
+    }
+
+    private static ChallengeGenerator trackingGenerator(AtomicInteger calls, AtomicInteger discardCalls) {
+        return new ChallengeGenerator() {
+            @Override
+            public GeneratedChallenge generate(io.github.chalsense.core.challenge.ChallengeGenerationRequest request) {
+                calls.incrementAndGet();
+                return generated();
+            }
+
+            @Override
+            public void discard(
+                    io.github.chalsense.core.challenge.ChallengeGenerationRequest request,
+                    GeneratedChallenge generated) {
+                discardCalls.incrementAndGet();
+            }
         };
     }
 

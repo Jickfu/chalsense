@@ -2,12 +2,12 @@
 
 ## 文档状态
 
-- 状态：D-013～D-018、D-021～D-032 已批准的协议、状态存储与 Widget 基线；不是已发布 API，最终 HTTP 路径仍需在 `chalsense-server` 创建前评审。
+- 状态：D-013～D-018、D-021～D-033 已批准的协议、状态存储、Widget 与滑块生成基线；不是已发布 API，最终 HTTP 路径仍需在 `chalsense-server` 创建前评审。D-033 不增加或改变线协议字段。
 - 范围：逻辑操作 `challenge.create`、`challenge.verify`、`verificationTicket.consume` 及其 Core 语义。
 - 约束：D-011 要求嵌入式 Java API 和受信任 HTTP API 进入同一 Core 状态机；本文不固定最终 URL，Java 包名和 Maven/npm 坐标以 D-019～D-021 为准。
 - 兼容性提示：核心状态机、字段语义、整数坐标与错误合并规则已获批准；verify/consume 机器向量冻结为 `docs/test-vectors/protocol-v1.json`，create 补充向量依 D-026 独立冻结为 `docs/test-vectors/challenge-create-v1.json`，状态 JSON 向量依 D-027 冻结为 `docs/test-vectors/state-json-v1.json`；全部 Java Core runner 均已通过。
 
-标签含义沿用 `docs/threat-model.md`。D-001～D-032 均作为已批准前提；文中“建议”只表示尚未冻结为公开 HTTP 表面的实现细节，不得改变已批准安全语义。
+标签含义沿用 `docs/threat-model.md`。D-001～D-033 均作为已批准前提；文中“建议”只表示尚未冻结为公开 HTTP 表面的实现细节，不得改变已批准安全语义。
 
 ## 术语
 

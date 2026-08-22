@@ -236,6 +236,16 @@
 - 结论：发布包以同源外部 `widget.css` 提供 Shadow DOM 样式，不依赖 inline style、`unsafe-inline` 或 `eval`；fixture 浏览器测试在 `default-src 'self'`、`style-src 'self'`、`script-src 'self'` 的 CSP 下运行。
 - 原因：现在 Widget 已有真实渲染、交互、无障碍与跨浏览器测试职责，满足 D-020 的建模块条件；注入 transport 可以在 HTTP 服务尚未冻结时验证前端协议行为，避免把部署 URL 或框架耦合进 npm 公共 API。
 
+### D-033 滑块生成器与短时资源边界
+
+- 日期：2026-08-22
+- 状态：已批准。
+- 结论：v0.1 在 `chalsense-core` 提供只依赖 JDK 的生产滑块生成器、受控本地 `BackgroundImageSource` SPI 和 `ChallengeResourcePublisher` SPI；不联网抓取素材，不内置来源不明图库，不引入图片框架。首个编码基线为 `320 × 180` 背景 PNG 与 `50 × 50` 透明拼图片 PNG；D-015 允许以后在资源元数据不变的前提下增加 WebP 编码器。
+- 结论：源图宽高、像素数、输出字节、生成并发和几何边距必须有硬上限。随机几何使用可注入 CSPRNG；确定性测试使用测试专用随机源和程序生成图片。目标位置、容差、`contextDigest` 与 ticket 不进入资源发布边界。
+- 结论：两个资源必须整包发布或明确失败，资源有效期不得超过 challenge。资源在 TTL 内允许重复读取，不改变 verify 的一次性消费。Challenge State 未确认写入、ID 冲突或后续创建失败时执行 best-effort 清理；清理失败的孤儿资源也必须由 publisher 的硬 TTL 删除。
+- 结论：Core 不提供会被误用为多实例生产存储的默认内存资源实现，也不冻结 HTTP 资源路径。具体文件系统、对象存储或 Redis 二进制实现由适配层显式装配，并遵守相同 TTL、容量和失败语义。
+- 原因：用 JDK 能力先建立可测试、无框架的生成边界，同时避免把素材来源、HTTP 路径或特定对象存储耦合进 Core；整包发布、失败清理与硬 TTL 限制资源泄漏和半成功挑战。
+
 ## 工作假设
 
 ### A-002 生产存储

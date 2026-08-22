@@ -2,7 +2,7 @@
 
 ## 文档状态
 
-本文记录已经形成共识的架构方向。详细协议、安全、坐标与前端规则分别见 `docs/protocol.md`、`docs/threat-model.md`、`docs/coordinates.md` 和 `docs/widget.md`。阶段 0 已通过评审；公开字段与调用方策略以 D-013～D-018、D-021～D-025 为准，模块与发布坐标以 D-019～D-020 为准，Redis Store 以 D-028～D-030 为准，Widget 以 D-032 为准。
+本文记录已经形成共识的架构方向。详细协议、安全、坐标、前端与生成器规则分别见 `docs/protocol.md`、`docs/threat-model.md`、`docs/coordinates.md`、`docs/widget.md` 和 `docs/slider-generator.md`。阶段 0 已通过评审；公开字段与调用方策略以 D-013～D-018、D-021～D-025 为准，模块与发布坐标以 D-019～D-020 为准，Redis Store 以 D-028～D-030 为准，Widget 以 D-032 为准，生产滑块生成边界以 D-033 为准。
 
 ## 总体结构
 
@@ -132,6 +132,8 @@ storageVersion 1 的 Core codec、严格 reader、固定 writer 与原子 Store 
 
 ## 技术选择方向
 
+生产滑块生成器依 D-033 位于 Core，使用 JDK `BufferedImage` / `ImageIO` 输出有界 PNG，不新增运行时依赖。素材通过 `BackgroundImageSource` 注入，两个二进制资源通过 `ChallengeResourcePublisher` 整包发布；publisher 不接触答案和业务上下文。状态写入未确认时 Core 尽力删除资源，硬 TTL 负责最终清理。具体对象存储、共享文件系统或资源 HTTP 路由仍属于适配层，不进入 Core。
+
 - Java 基线：源码和字节码最低支持 Java 17，CI 至少验证 Java 17 与 Java 21。
 - 服务运行时：独立服务推荐 Java 21，但不得使用 Java 21 专属 API 破坏 Core 兼容性。
 - 前端：TypeScript、原生 Web Component、Canvas、Pointer Events。
@@ -165,4 +167,4 @@ storageVersion 1 的 Core codec、严格 reader、固定 writer 与原子 Store 
 
 ## 仍需验证的问题
 
-D-013～D-018 与 D-021～D-032 已批准上述协议、资源、存储、站点模型、协议词法约束、ticket 摘要输入、调用方/Origin、TTL、Redis Store、不可解码状态语义、Cluster 延期和 Widget 基线；D-023 冻结了 verify/consume 向量，D-026 独立冻结了 create 补充向量，D-027 冻结了 storageVersion 1 状态 JSON。D-014 确定性原型也已通过并由 Widget Vitest runner 执行。Q-004 的最终经验性容差校准属于 v0.1 发布前门禁；它可以调整 `policyVersion` 和服务端容差，但不得改变整数坐标线协议或把容差交给客户端指定。
+D-013～D-018 与 D-021～D-033 已批准上述协议、资源、存储、站点模型、协议词法约束、ticket 摘要输入、调用方/Origin、TTL、Redis Store、不可解码状态语义、Cluster 延期、Widget 和生产滑块生成边界；D-023 冻结了 verify/consume 向量，D-026 独立冻结了 create 补充向量，D-027 冻结了 storageVersion 1 状态 JSON。D-014 确定性原型也已通过并由 Widget Vitest runner 执行。Q-004 的最终经验性容差校准属于 v0.1 发布前门禁；它可以调整 `policyVersion` 和服务端容差，但不得改变整数坐标线协议或把容差交给客户端指定。

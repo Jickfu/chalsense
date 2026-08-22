@@ -75,11 +75,12 @@ public final class ChallengeCreator {
         for (int attempt = 0; attempt < MAXIMUM_ID_ATTEMPTS; attempt++) {
             ChallengeId challengeId = Objects.requireNonNull(
                     tokenGenerator.newChallengeId(), "tokenGenerator returned null");
+            ChallengeGenerationRequest generationRequest = new ChallengeGenerationRequest(
+                    registration, command.action(), challengeId, issuedAt, expiresAt);
             final GeneratedChallenge generated;
             try {
                 generated = Objects.requireNonNull(
-                        challengeGenerator.generate(new ChallengeGenerationRequest(
-                                registration, command.action(), challengeId, issuedAt, expiresAt)),
+                        challengeGenerator.generate(generationRequest),
                         "challengeGenerator returned null");
             } catch (RuntimeException exception) {
                 return fail(CreateOutcome.DEPENDENCY_UNAVAILABLE, SecurityReason.GENERATOR_FAILED);
@@ -96,8 +97,14 @@ public final class ChallengeCreator {
                     expiresAt,
                     generated.geometry(),
                     registration.policy().policyVersion());
-            StoreChallengeResult storeResult = stateStore.storeChallengeIfAbsent(
-                    command.siteKey(), challengeId, state);
+            final StoreChallengeResult storeResult;
+            try {
+                storeResult = Objects.requireNonNull(stateStore.storeChallengeIfAbsent(
+                        command.siteKey(), challengeId, state), "stateStore returned null");
+            } catch (RuntimeException exception) {
+                discard(generationRequest, generated);
+                return fail(CreateOutcome.DEPENDENCY_UNAVAILABLE, SecurityReason.STORE_FAILED);
+            }
             if (storeResult == StoreChallengeResult.CONFIRMED) {
                 return CreateResult.created(new CreatedChallenge(
                         challengeId,
@@ -108,9 +115,11 @@ public final class ChallengeCreator {
                         generated.resources()));
             }
             if (storeResult == StoreChallengeResult.ALREADY_EXISTS) {
+                discard(generationRequest, generated);
                 record(SecurityReason.CHALLENGE_ID_COLLISION);
                 continue;
             }
+            discard(generationRequest, generated);
             return fail(
                     CreateOutcome.DEPENDENCY_UNAVAILABLE,
                     storeResult == StoreChallengeResult.UNKNOWN
@@ -118,6 +127,14 @@ public final class ChallengeCreator {
                             : SecurityReason.STORE_FAILED);
         }
         return CreateResult.failure(CreateOutcome.DEPENDENCY_UNAVAILABLE);
+    }
+
+    private void discard(ChallengeGenerationRequest request, GeneratedChallenge generated) {
+        try {
+            challengeGenerator.discard(request, generated);
+        } catch (RuntimeException ignored) {
+            // Publisher hard TTL remains the final cleanup boundary.
+        }
     }
 
     private CreateResult fail(CreateOutcome outcome, SecurityReason reason) {
