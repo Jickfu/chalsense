@@ -38,6 +38,11 @@ jobs:
           png = b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', width, height, 8, 2, 0, 0, 0)) + chunk(b'IDAT', zlib.compress(raw)) + chunk(b'IEND', b'')
           open('.container-test/backgrounds/background.png', 'wb').write(png)
           PY
+          export CHALSENSE_BACKGROUND_DIRECTORY="$PWD/.container-test/backgrounds"
+          export CHALSENSE_RATE_LIMIT_HMAC_KEY=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+          export CHALSENSE_SERVICE_SECRET_SHA256=Zmh6rfhivXdsj8GLjp-OIAiXFIVu4jOzkCpZHQ1fKSU
+          docker compose --file deploy/compose/compose.yml config --quiet
+          docker compose --file deploy/compose/compose.yml --file deploy/compose/compose.valkey.yml config --quiet
           docker network create chalsense-test
           docker run --detach --name state --network chalsense-test redis:7.2.14
           docker run --detach --name chalsense --network chalsense-test \
