@@ -7,7 +7,7 @@
 - 状态序列化冻结向量：`docs/test-vectors/state-json-v1.json`；它依 D-027 固定 storageVersion 1 的字节与 reader 合约。冻结前草案 SHA-256 为 `8af527c5be54044c58608a5781c9f9b7ab9b3bd95f94dd5350648ed643947125`，首个冻结文件 SHA-256 为 `919142f4f087edeb01a3a4e555909caa7cca7ed5690466f8e4fa4ca9ea7f1c87`。
 - 首个冻结文件 SHA-256：`1ecdf006dbd26b0a1ce0ee1915c843465178b2d7fcb673513ffa7c9487a8c666`。
 - create 补充冻结文件 SHA-256：`2d037c079d2def5e03985a66ae0e3c40be2924123a99d2da81b515188817d799`；其冻结前草案 SHA-256 为 `e0106b7a1a0e4bb11bbb9460cdbf7287b3a80aae41ca88fd07db640fd0bc9db9`。
-- 目标：未来 Java Core、HTTP 服务和其他语言实现对相同输入、时钟、随机源与 State Store 脚本产生一致的安全结果。
+- 目标：当前 Java Core、Widget 坐标 runner 与未来 HTTP 服务/其他语言实现对相同输入、时钟、随机源与 State Store 脚本产生一致的安全结果。
 
 向量不是性能基准，也不证明轨迹启发式能识别真人。它验证的是编码、状态转换、边界、绑定与故障语义。
 

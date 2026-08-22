@@ -223,6 +223,19 @@
 - 边界：若未来迁移到组织仓库，必须保留 GitHub redirect、更新发布来源与安全配置，并通过新的决策记录确认；当前不预先创建或占用 `chalsense` 组织。
 - 原因：项目所有者明确选择直接使用个人账号公开托管，避免为当前实现阶段创建额外组织。
 
+### D-032 Widget 工具链、公开边界与无障碍基线
+
+- 日期：2026-08-22
+- 状态：已批准。
+- 结论：创建 npm workspace `packages/widget`，包名为 `@chalsense/widget`，首版版本 `0.1.0`，自定义元素名为 `<chalsense-widget>`。实现使用 TypeScript 和原生 Web Component、Shadow DOM、Canvas、Pointer Events，不使用 UI 框架、运行时依赖或生产 bundler。
+- 结论：构建基线为 Node.js 24 LTS 与 npm lockfile；固定开发依赖 TypeScript 7.0.2、Vitest 4.1.11 和 Playwright 1.62.1。许可证分别为 Apache-2.0、MIT 和 Apache-2.0，只用于构建与测试。发布前仍须核验 `@chalsense` npm scope 所有权。
+- 结论：Widget 通过接入方注入的 `ChalSenseTransport` 调用逻辑 `challenge.create` / `challenge.verify`，当前不固定 HTTP URL、认证、CORS 或错误状态码。任一 verify 只发送一次；超时、断网或不确定结果不得透明重试同一 challenge。
+- 结论：公开成功事件只携带 `verificationTicket` 及服务端时间，不表示业务动作获准或用户已被证明为真人。客户端 challenge、资源、坐标、轨迹、时间戳、事件和回调继续视为不可信输入。
+- 结论：默认不采集 pressure、倾角、设备指纹、持久设备标识或未批准浏览器遥测。轨迹只包含 D-014 允许的相对 `x`、`y`、`t` 与事件类型，并限制为 2～256 点、30 秒。
+- 结论：首版提供简体中文和英文默认文案及覆盖接口，支持鼠标、触摸、笔和键盘操作；始终提供 `chalsense-alternative` 事件供接入方转入 MFA、邮件或人工协助。键盘可操作不等于视觉拼图对所有用户可访问，替代流程仍是接入要求。
+- 结论：发布包以同源外部 `widget.css` 提供 Shadow DOM 样式，不依赖 inline style、`unsafe-inline` 或 `eval`；fixture 浏览器测试在 `default-src 'self'`、`style-src 'self'`、`script-src 'self'` 的 CSP 下运行。
+- 原因：现在 Widget 已有真实渲染、交互、无障碍与跨浏览器测试职责，满足 D-020 的建模块条件；注入 transport 可以在 HTTP 服务尚未冻结时验证前端协议行为，避免把部署 URL 或框架耦合进 npm 公共 API。
+
 ## 工作假设
 
 ### A-002 生产存储

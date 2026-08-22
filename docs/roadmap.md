@@ -122,8 +122,8 @@
 
 ## 近期下一步
 
-1. 经项目所有者确认后，建立 Java 17 基线的最小协议/Core 测试脚手架，不提前加入 Spring、服务层或 Widget 构建链。
-2. 让 Java Core 执行已冻结的 `coordinates-v1.json` 和 draft 协议向量；实现不一致时不得修改向量迁就实现。
-3. 为 State Store SPI 建立内存测试实现，先验证状态机、并发和故障注入，再接入 Redis/Valkey。
+1. Protocol、Core、Redis/Valkey Store 与 `@chalsense/widget` 最小实现已经建立；继续保持冻结向量、Java 17/21、Redis/Valkey 和浏览器 CI 绿色。
+2. 下一实现里程碑是生产 `SLIDER_PUZZLE` challenge 生成器与 D-015 短时资源提供器，先完成素材许可、资源上限、清理和确定性测试，不提前引入 HTTP 框架。
+3. 生成器稳定后建立薄 `chalsense-server` HTTP 纵向切片，让 Widget 的 transport adapter 与 Core 状态机端到端联通；不得在 HTTP 层复制验证逻辑。
 4. 将 Q-004 的真实用户误拒率和攻击通过率校准作为 v0.1 发布前门禁，并记录最终 `policyVersion`；不得改变整数坐标线协议。
-5. 完成 GitHub 组织、npm scope、Maven 坐标、域名和商标最终核验。
+5. 发布 npm/Maven/容器前完成 `@chalsense` scope、Maven Central namespace、容器路径、域名和商标最终核验。

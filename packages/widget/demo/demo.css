@@ -1,0 +1,8 @@
+:root { color: #17212f; background: #eef3f8; font-family: system-ui, sans-serif; }
+body { margin: 0; }
+main { width: min(560px, calc(100% - 28px)); margin: 48px auto; }
+h1 { margin: 0 0 8px; font-size: 28px; }
+.lede { margin: 0 0 22px; color: #586a7c; }
+#launch-help { margin-bottom: 22px; border: 1px solid #c98b26; border-radius: 10px; padding: 14px; background: #fff6df; }
+#launch-help p { margin: 6px 0 0; line-height: 1.5; }
+pre { overflow: auto; margin-top: 18px; border-radius: 10px; padding: 12px; color: #dce8f5; background: #101a25; font-size: 12px; }

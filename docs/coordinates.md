@@ -234,7 +234,7 @@ tolerance = clamp(rawTolerance, 6250, 18750)
 
 1. 同一源几何在所有 CSS/DPR 组合中生成相同 `N` 答案，DPR 不出现在提交协议中。
 2. 任意抓取点完成同一位移时 `finalPieceX` 相同。
-3. 机器向量在 JavaScript 参考实现与未来 Java Core 中逐项一致。
+3. 机器向量在 JavaScript 原型、Java Core 与 `@chalsense/widget` Vitest runner 中逐项一致。
 4. 容差边界不因浮点显示误差翻转：边界成功，界外 1 单位失败。
 5. 拖动中 resize/cancel 不提交；超大 DPR 被 clamp，Canvas 内存有明确上限。
 6. 键盘与替代流程的交互需求形成独立无障碍测试项；原型不得把 pointer-only 当成完成无障碍支持。

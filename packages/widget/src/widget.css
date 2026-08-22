@@ -1,0 +1,82 @@
+:host {
+  display: block;
+  color: var(--chalsense-color, #17212f);
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+.card {
+  width: 100%;
+  max-width: 720px;
+  overflow: hidden;
+  border: 1px solid var(--chalsense-border, #d6dee8);
+  border-radius: 14px;
+  background: var(--chalsense-surface, #fff);
+  box-shadow: 0 10px 30px rgba(28, 45, 65, .08);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--chalsense-border, #d6dee8);
+}
+
+.title { margin: 0; font-size: 15px; font-weight: 750; }
+.badge { color: #34618f; font-size: 11px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.body { padding: 16px; }
+.canvas-shell { position: relative; width: 100%; overflow: hidden; border-radius: 10px; background: #e8eef5; }
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: inherit;
+  touch-action: none;
+  cursor: grab;
+  outline: none;
+}
+
+canvas.dragging { cursor: grabbing; }
+canvas:focus-visible, button:focus-visible { outline: 3px solid #69a7ec; outline-offset: 3px; }
+.status { min-height: 21px; margin: 12px 0 0; color: var(--chalsense-muted, #526375); }
+.hint { margin: 5px 0 0; color: var(--chalsense-muted, #6c7c8e); font-size: 12px; }
+.actions { display: flex; align-items: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+
+button {
+  min-height: 40px;
+  border: 1px solid #b9c7d6;
+  border-radius: 9px;
+  padding: 0 14px;
+  color: inherit;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+button.primary { border-color: #1769d2; color: #fff; background: #1769d2; }
+button.link { min-height: 32px; border-color: transparent; padding-inline: 4px; color: #155daa; background: transparent; }
+button:disabled { cursor: wait; opacity: .62; }
+[hidden] { display: none !important; }
+.success { color: #087047; }
+.failure { color: #a33232; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; }
+}
+
+@media (prefers-color-scheme: dark) {
+  :host {
+    --chalsense-color: #e8eef6;
+    --chalsense-muted: #afbdcb;
+    --chalsense-border: #405063;
+    --chalsense-surface: #182331;
+  }
+  button { border-color: #56687c; background: #202e3d; }
+  button.primary { border-color: #5c9fea; background: #1769d2; }
+  .canvas-shell { background: #101923; }
+}

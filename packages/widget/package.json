@@ -1,0 +1,34 @@
+{
+  "name": "@chalsense/widget",
+  "version": "0.1.0",
+  "description": "Framework-independent ChalSense verification Web Component.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": true,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./coordinate": {
+      "types": "./dist/coordinate.d.ts",
+      "import": "./dist/coordinate.js"
+    }
+  },
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-assets.mjs",
+    "test": "vitest run",
+    "test:browser": "npm run build && playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "typescript": "7.0.2",
+    "vitest": "4.1.11"
+  }
+}

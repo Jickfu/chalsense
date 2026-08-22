@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>ChalSense Widget Fixture</title>
+  <link rel="stylesheet" href="./demo.css">
+</head>
+<body>
+<main>
+  <h1>ChalSense Widget</h1>
+  <p class="lede">本页使用本地程序生成图片和内存 fixture transport，不代表 HTTP API 已冻结。</p>
+  <aside id="launch-help">
+    <strong>请通过本地 HTTP 服务运行本页</strong>
+    <p>Windows 用户请关闭此页，双击同目录下的 <code>open-demo.cmd</code>。浏览器出于安全原因不会从 <code>file://</code> 运行本页的 ES module。</p>
+  </aside>
+  <chalsense-widget></chalsense-widget>
+  <pre id="events" aria-live="polite">等待事件</pre>
+</main>
+<script type="module" src="./demo.mjs"></script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 
 ## 文档状态
 
-本文记录已经形成共识的架构方向。详细协议、安全与坐标规则分别见 `docs/protocol.md`、`docs/threat-model.md` 和 `docs/coordinates.md`。阶段 0 已通过评审；公开字段与调用方策略以 D-013～D-018、D-021～D-025 为准，模块与发布坐标以 D-019～D-020 为准，Redis Store 以 D-028～D-030 为准。
+本文记录已经形成共识的架构方向。详细协议、安全、坐标与前端规则分别见 `docs/protocol.md`、`docs/threat-model.md`、`docs/coordinates.md` 和 `docs/widget.md`。阶段 0 已通过评审；公开字段与调用方策略以 D-013～D-018、D-021～D-025 为准，模块与发布坐标以 D-019～D-020 为准，Redis Store 以 D-028～D-030 为准，Widget 以 D-032 为准。
 
 ## 总体结构
 
@@ -30,7 +30,7 @@ TypeScript Web Component
 
 ## 模块方向
 
-模块名称与发布坐标已经批准；当前已创建前三个 Maven 模块：
+模块名称与发布坐标已经批准；当前已创建三个 Maven 模块和一个 npm workspace：
 
 - `chalsense-protocol`：公共请求、响应、错误、版本和 JSON Schema。
 - `chalsense-core`：挑战生成、验证、票据、安全状态机和扩展接口；不依赖 Spring。
@@ -42,7 +42,7 @@ TypeScript Web Component
 
 首版不应为了模块名整齐拆出没有独立职责的空模块。最终拆分要服从依赖边界和发布需要。
 
-当前 Maven 依赖方向为 `chalsense-store-redis → chalsense-core → chalsense-protocol`。`chalsense-protocol` 不含生产依赖，`chalsense-core` 与 Redis Store 均不依赖 Spring；Starter、Server、Widget 与 Testkit 在出现真实职责和相应测试时再建立。
+当前 Maven 依赖方向为 `chalsense-store-redis → chalsense-core → chalsense-protocol`。`chalsense-protocol` 不含生产依赖，`chalsense-core` 与 Redis Store 均不依赖 Spring。`@chalsense/widget` 已作为独立 npm workspace 建立，不依赖 Java 模块或 UI 框架，通过协议类型和冻结坐标向量保持一致；Starter、Server 与 Testkit 在出现真实职责和相应测试时再建立。
 
 ## 协议概览
 
@@ -165,4 +165,4 @@ storageVersion 1 的 Core codec、严格 reader、固定 writer 与原子 Store 
 
 ## 仍需验证的问题
 
-D-013～D-018 与 D-021～D-030 已批准上述协议、资源、存储、站点模型、协议词法约束、ticket 摘要输入、调用方/Origin、TTL、Redis Store、不可解码状态语义和 Cluster 延期边界；D-023 冻结了 verify/consume 向量，D-026 独立冻结了 create 补充向量，D-027 冻结了 storageVersion 1 状态 JSON。D-014 确定性原型也已通过。Q-004 的最终经验性容差校准属于 v0.1 发布前门禁；它可以调整 `policyVersion` 和服务端容差，但不得改变整数坐标线协议或把容差交给客户端指定。
+D-013～D-018 与 D-021～D-032 已批准上述协议、资源、存储、站点模型、协议词法约束、ticket 摘要输入、调用方/Origin、TTL、Redis Store、不可解码状态语义、Cluster 延期和 Widget 基线；D-023 冻结了 verify/consume 向量，D-026 独立冻结了 create 补充向量，D-027 冻结了 storageVersion 1 状态 JSON。D-014 确定性原型也已通过并由 Widget Vitest runner 执行。Q-004 的最终经验性容差校准属于 v0.1 发布前门禁；它可以调整 `policyVersion` 和服务端容差，但不得改变整数坐标线协议或把容差交给客户端指定。
