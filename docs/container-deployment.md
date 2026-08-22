@@ -15,7 +15,7 @@
 
 构建和运行阶段使用 Docker Official Image `eclipse-temurin`。该镜像由 Adoptium 维护；OpenJDK 使用 GPL-2.0 with Classpath Exception，镜像 Dockerfile/脚本使用 Apache-2.0，基础发行版还包含各自许可证的软件。构建阶段额外安装 Ubuntu `unzip`，使 Maven Wrapper 下载 `.zip` 并执行仓库固定的 SHA-256 校验；它不进入最终运行镜像。官方说明和当前标签以 [Eclipse Temurin Docker Official Image](https://hub.docker.com/_/eclipse-temurin/) 为准。
 
-选择完整 patch tag 而不是浮动 `21`，让评审可以还原构建输入；它仍不是内容摘要固定。正式发布流程还需要多架构 build、digest/SBOM、漏洞扫描、签名和 provenance，当前本地镜像不得宣传为已完成供应链加固的正式发布物。
+选择完整 patch tag 而不是浮动 `21`，让评审可以还原构建输入；它仍不是内容摘要固定。D-039 已建立多架构、digest/SBOM、漏洞扫描、签名和 provenance 发布门禁；在第一个合规版本标签完成前，当前本地镜像仍不得宣传为正式发布物。详见[容器发布规范](container-release.md)。
 
 ## 本地 Compose
 
@@ -54,4 +54,4 @@ docker compose down
 
 ## 尚未保证
 
-当前没有发布 `ghcr.io/chalsense/chalsense-server`，也没有承诺多架构清单、离线镜像、FIPS、rootless runtime 兼容矩阵或 Kubernetes Helm chart。这些能力必须在发布身份、供应链签名和目标平台验证后另行完成。
+当前目标路径已由 D-039 修订为 `ghcr.io/jickfu/chalsense-server`，但尚未创建版本标签或发布镜像。当前仍不保证离线镜像、FIPS、rootless runtime 兼容矩阵或 Kubernetes Helm chart。

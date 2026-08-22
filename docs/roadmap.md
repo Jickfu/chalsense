@@ -124,6 +124,6 @@
 
 1. Protocol、Core、Redis/Valkey Store 与 `@chalsense/widget` 最小实现已经建立；继续保持冻结向量、Java 17/21、Redis/Valkey 和浏览器 CI 绿色。
 2. D-033 的生产 `SLIDER_PUZZLE` PNG 生成器、背景来源/短时资源发布 SPI、素材清单、资源上限、失败清理和确定性测试已经建立；继续保持不内置来源不明素材，不把内存资源存储误称为多实例生产实现。
-3. D-034～D-038 的薄 `chalsense-server`、Redis 硬 TTL 资源、Widget HTTP transport、双 Server 端到端测试、公开限流、反向代理、隐私安全可观测性、手动合成容量基准和非 root OCI/Compose 基线已经建立；下一步在目标部署拓扑执行稳定性与资源观测，并完成正式镜像的 SBOM、扫描、签名和 provenance 门禁。Server 和 management 端口仍默认监听 loopback。
+3. D-034～D-039 的薄 `chalsense-server`、Redis 硬 TTL 资源、Widget HTTP transport、双 Server 端到端测试、公开限流、反向代理、隐私安全可观测性、手动合成容量基准、非 root OCI/Compose，以及 `ghcr.io/jickfu/chalsense-server` 多架构扫描、SBOM、签名和 provenance 门禁已经建立；下一步在目标部署拓扑执行稳定性与资源观测，并在首个版本标签前完成全部发布评审。Server 和 management 端口仍默认监听 loopback。
 4. 将 Q-004 的真实用户误拒率和攻击通过率校准作为 v0.1 发布前门禁，并记录最终 `policyVersion`；不得改变整数坐标线协议。
-5. 发布 npm/Maven/容器前完成 `@chalsense` scope、Maven Central namespace、容器路径、域名和商标最终核验。
+5. 发布 npm/Maven 前完成 `@chalsense` scope、Maven Central namespace、域名和商标最终核验；容器路径已经由 D-039 确认，但首发仍必须完成版本、漏洞与发布说明评审。

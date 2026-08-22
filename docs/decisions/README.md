@@ -121,8 +121,8 @@
 ### D-019 命名与发布坐标
 
 - 日期：2026-08-22
-- 状态：已批准；其中 GitHub 组织与主仓库归属已由 D-031 修订，其他命名和发布坐标保持有效。
-- 结论：品牌展示统一使用 `ChalSense`，代码和普通标识统一使用小写 `chalsense`。GitHub 组织与主仓库目标为 `chalsense/chalsense`；Java `groupId` 与包名前缀为 `io.github.chalsense`；Maven 构件命名为 `chalsense-core`、`chalsense-protocol`、`chalsense-spring-boot-starter` 和 `chalsense-server`；npm scope 为 `@chalsense`，前端组件为 `@chalsense/widget`；容器镜像目标为 `ghcr.io/chalsense/chalsense-server`；配置前缀为 `chalsense.*`。
+- 状态：已批准；GitHub 组织与主仓库归属已由 D-031 修订，容器镜像路径已由 D-039 修订，其他命名和发布坐标保持有效。
+- 结论：品牌展示统一使用 `ChalSense`，代码和普通标识统一使用小写 `chalsense`。GitHub 组织与主仓库目标原为 `chalsense/chalsense`；Java `groupId` 与包名前缀为 `io.github.chalsense`；Maven 构件命名为 `chalsense-core`、`chalsense-protocol`、`chalsense-spring-boot-starter` 和 `chalsense-server`；npm scope 为 `@chalsense`，前端组件为 `@chalsense/widget`；配置前缀为 `chalsense.*`。当前实际仓库和容器路径分别以 D-031、D-039 为准。
 - 结论：官网与域名不进入当前功能实现范围；正式公开前仍须验证 GitHub 组织、npm scope、Maven Central namespace、容器路径和商标的实际可用性与所有权。
 - 原因：统一品牌、包、构件和配置命名，减少接入歧义；将尚未注册的外部资源明确设为发布门禁，而不是假装已经占有。
 
@@ -293,6 +293,16 @@
 - 结论：当前只提供本地构建与 Redis/Valkey 运行基线，不发布正式 GHCR 镜像，也不承诺多架构、SBOM、签名、provenance、Kubernetes 或生产 secret 交付；这些属于正式发布门禁。
 - 依赖审查：没有新增 Maven/npm 依赖。基础镜像使用 Docker Official Image `eclipse-temurin`；OpenJDK 为 GPL-2.0 with Classpath Exception，镜像构建文件为 Apache-2.0，基础发行版组件仍需随升级审查。替代方案是 distroless、自建 jlink 或原生镜像，但会增加证书、诊断、兼容与维护成本。
 - 原因：先验证最小可部署形态和运行时最小权限，同时避免把开发 Compose、已知 demo secret 或未签名镜像误称为生产交付物。
+
+### D-039 GHCR 路径与容器供应链门禁
+
+- 日期：2026-08-22
+- 状态：已批准；修订 D-019 的容器镜像路径，并完成 D-038 的正式发布门禁设计。
+- 结论：正式容器路径改为当前账号实际可用的 `ghcr.io/jickfu/chalsense-server`。只有格式为 `vMAJOR.MINOR.PATCH` 且与根 POM 非 SNAPSHOT 版本完全一致的标签可以发布；手动 workflow dispatch 只执行多架构构建和扫描，不发布。
+- 结论：发布支持 `linux/amd64` 与 `linux/arm64`。两个架构分别通过 Trivy OS/library 扫描后才能发布；已有修复版本的 `HIGH`/`CRITICAL` 漏洞阻断发布，无修复漏洞进入人工风险评审，不得因扫描通过宣称无漏洞。
+- 结论：发布以 digest 为身份，附带 BuildKit per-platform SPDX SBOM、max-mode provenance、CycloneDX SBOM、GitHub provenance/SBOM attestations，并使用 GitHub OIDC 执行 Sigstore keyless 签名和同工作流验证。不配置长期 registry 或签名私钥。
+- CI 依赖审查：Docker 官方 Actions 为 Apache-2.0；GitHub attest/upload Actions 为 MIT；Sigstore cosign-installer 与 Aqua Security Trivy action 为 Apache-2.0。全部仅用于 CI、固定完整提交 SHA，并限制 job 权限。替代方案是手写 Buildx/Trivy/Cosign 下载校验脚本或托管签名密钥，但会增加供应链脚本、长期密钥托管和轮换风险。
+- 原因：使用已控制的个人账号路径消除未占用组织阻塞；标签、扫描、成分、来源和无长期密钥签名形成可验证发布链，同时保留对上游漏洞与基础设施风险的诚实边界。
 
 ## 工作假设
 
