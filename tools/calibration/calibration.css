@@ -1,0 +1,12 @@
+:root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+body { margin: 0; background: #eef2f5; color: #17212b; }
+main { width: min(720px, calc(100% - 32px)); margin: 32px auto; padding: 24px; background: white; border-radius: 12px; }
+.privacy { padding: 16px; border: 1px solid #9aabb9; border-radius: 8px; }
+canvas { display: block; width: min(100%, 480px); height: auto; margin: 24px 0 12px; border-radius: 8px; touch-action: none; }
+canvas:focus { outline: 3px solid #2667c9; outline-offset: 3px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+button { padding: 8px 14px; }
+@media (prefers-color-scheme: dark) {
+  body { background: #111820; color: #e8edf2; }
+  main { background: #1b2732; }
+}

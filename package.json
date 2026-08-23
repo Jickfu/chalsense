@@ -13,6 +13,7 @@
     "demo:widget": "npm run build:widget && node packages/widget/scripts/serve-demo.mjs --open",
     "test:widget": "npm run test --workspace @chalsense/widget",
     "test:widget:browser": "npm run test:browser --workspace @chalsense/widget",
-    "verify:widget": "npm run build:widget && npm run test:widget && npm run test:widget:browser"
+    "test:calibration": "node --test tools/calibration/tests/*.test.mjs",
+    "verify:widget": "npm run build:widget && npm run test:widget && npm run test:widget:browser && npm run test:calibration"
   }
 }

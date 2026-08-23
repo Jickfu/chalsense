@@ -15,6 +15,18 @@ on:
         description: Concurrent flows
         default: "4"
         required: true
+      duration_seconds:
+        description: Timed run duration; 0 uses iterations
+        default: "0"
+        required: true
+      backend:
+        description: State backend to benchmark
+        type: choice
+        default: both
+        options:
+          - both
+          - redis
+          - valkey
 
 permissions:
   contents: read
@@ -23,7 +35,7 @@ jobs:
   synthetic-http:
     name: Synthetic HTTP / Redis and Valkey
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 70
     services:
       redis:
         image: redis:7.2.14
@@ -60,16 +72,20 @@ jobs:
           WARMUP: ${{ inputs.warmup }}
           ITERATIONS: ${{ inputs.iterations }}
           CONCURRENCY: ${{ inputs.concurrency }}
+          DURATION_SECONDS: ${{ inputs.duration_seconds }}
         run: |
           [[ "$WARMUP" =~ ^[0-9]+$ ]] && (( WARMUP <= 10000 ))
           [[ "$ITERATIONS" =~ ^[0-9]+$ ]] && (( ITERATIONS >= 1 && ITERATIONS <= 100000 ))
           [[ "$CONCURRENCY" =~ ^[0-9]+$ ]] && (( CONCURRENCY >= 1 && CONCURRENCY <= 128 ))
+          [[ "$DURATION_SECONDS" =~ ^[0-9]+$ ]] && (( DURATION_SECONDS <= 1800 ))
 
       - name: Benchmark Redis
+        if: inputs.backend == 'both' || inputs.backend == 'redis'
         env:
           WARMUP: ${{ inputs.warmup }}
           ITERATIONS: ${{ inputs.iterations }}
           CONCURRENCY: ${{ inputs.concurrency }}
+          DURATION_SECONDS: ${{ inputs.duration_seconds }}
         run: |
           bash ./mvnw --batch-mode --no-transfer-progress -pl chalsense-server -am \
             -Dchalsense.server.integration=true \
@@ -78,14 +94,18 @@ jobs:
             -Dchalsense.capacity.warmup="$WARMUP" \
             -Dchalsense.capacity.iterations="$ITERATIONS" \
             -Dchalsense.capacity.concurrency="$CONCURRENCY" \
+            -Dchalsense.capacity.duration-seconds="$DURATION_SECONDS" \
+            -Dchalsense.audit.level=WARN \
             -Dchalsense.redis.port=6379 test
           cp chalsense-server/target/capacity-report.json capacity-redis.json
 
       - name: Benchmark Valkey
+        if: inputs.backend == 'both' || inputs.backend == 'valkey'
         env:
           WARMUP: ${{ inputs.warmup }}
           ITERATIONS: ${{ inputs.iterations }}
           CONCURRENCY: ${{ inputs.concurrency }}
+          DURATION_SECONDS: ${{ inputs.duration_seconds }}
         run: |
           bash ./mvnw --batch-mode --no-transfer-progress -pl chalsense-server -am \
             -Dchalsense.server.integration=true \
@@ -94,6 +114,8 @@ jobs:
             -Dchalsense.capacity.warmup="$WARMUP" \
             -Dchalsense.capacity.iterations="$ITERATIONS" \
             -Dchalsense.capacity.concurrency="$CONCURRENCY" \
+            -Dchalsense.capacity.duration-seconds="$DURATION_SECONDS" \
+            -Dchalsense.audit.level=WARN \
             -Dchalsense.redis.port=6380 test
           cp chalsense-server/target/capacity-report.json capacity-valkey.json
 

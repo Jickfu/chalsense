@@ -41,6 +41,7 @@
                     <include>protocol-v1.json</include>
                     <include>challenge-create-v1.json</include>
                     <include>state-json-v1.json</include>
+                    <include>attack-baseline-v1.json</include>
                 </includes>
             </testResource>
         </testResources>

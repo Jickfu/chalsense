@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+    <springProperty scope="context" name="AUDIT_LEVEL" source="chalsense.audit.level" defaultValue="INFO"/>
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
     <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
 
@@ -10,7 +11,7 @@
         </encoder>
     </appender>
 
-    <logger name="io.github.chalsense.audit" level="INFO" additivity="false">
+    <logger name="io.github.chalsense.audit" level="${AUDIT_LEVEL}" additivity="false">
         <appender-ref ref="AUDIT_CONSOLE"/>
     </logger>
 

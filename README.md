@@ -4,6 +4,8 @@ ChalSense 是一个面向 JVM 与 Web 应用的自托管人机验证项目，目
 
 当前公开主仓库：[Jickfu/chalsense](https://github.com/Jickfu/chalsense)。
 
+安全问题请勿公开披露；使用 [Security Policy](SECURITY.md) 指定的 GitHub 私密漏洞报告入口。
+
 项目已于 2026-08-22 通过阶段 0 设计基线评审，现已进入最小协议、Core 与 Redis State Store 实现阶段，尚未开始完整 v0.1 业务实现。威胁模型、协议、安全边界、模块职责、坐标规范和关键技术决策已经形成可追溯基线；当前只实现可验证的协议、Core 与生产状态存储基础，不提前扩张验证码玩法、框架、官网或管理能力。
 
 ## 当前定位
@@ -36,10 +38,12 @@ ChalSense 是一个面向 JVM 与 Web 应用的自托管人机验证项目，目
 16. [容量测试与限额校准](docs/capacity-testing.md)：了解合成基准口径、隐私边界和生产校准门禁。
 17. [OCI 镜像与 Compose 部署](docs/container-deployment.md)：了解非 root 镜像、最小拓扑、素材挂载和生产边界。
 18. [容器发布与供应链验证](docs/container-release.md)：了解 GHCR、版本标签、扫描、SBOM、签名和 provenance 门禁。
-19. [决策记录](docs/decisions/README.md)：区分已批准结论、工作假设和待决策事项。
-20. [技术决策依据](docs/remaining-decisions.md)：了解 D-013～D-018 的选型依据、取舍及 D-014 的条件边界。
-21. [路线图](docs/roadmap.md)：了解分期范围、完成标准和评估指标。
-22. [阶段 0 评审](docs/stage-0-review.md)：了解当前证据、阻塞项和是否允许开始实现。
+19. [真实用户容差校准](docs/calibration-study.md)：了解明确同意、本地聚合、保留期和公开门禁。
+20. [合成攻击回归基线](docs/attack-evaluation.md)：了解当前已知攻击通过行为、机器样本与明确限制。
+21. [决策记录](docs/decisions/README.md)：区分已批准结论、工作假设和待决策事项。
+22. [技术决策依据](docs/remaining-decisions.md)：了解 D-013～D-018 的选型依据、取舍及 D-014 的条件边界。
+23. [路线图](docs/roadmap.md)：了解分期范围、完成标准和评估指标。
+24. [阶段 0 评审](docs/stage-0-review.md)：了解当前证据、阻塞项和是否允许开始实现。
 
 ## 当前阶段的完成标准
 

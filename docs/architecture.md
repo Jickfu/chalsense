@@ -171,4 +171,4 @@ D-036 将指标、审计与健康实现限制在 Server 适配层。Core 继续�
 
 ## 仍需验证的问题
 
-D-013～D-036 已批准上述协议、资源、存储、站点模型、协议词法约束、ticket 摘要输入、调用方/Origin、TTL、Redis Store、不可解码状态语义、Cluster 延期、Widget、生产滑块生成边界、HTTP v0.1、公开限流/代理信任和可观测性边界。D-023 冻结了 verify/consume 向量，D-026 独立冻结了 create 补充向量，D-027 冻结了 storageVersion 1 状态 JSON。D-014 确定性原型也已通过并由 Widget Vitest runner 执行。Q-004 的最终经验性容差校准属于 v0.1 发布前门禁；它可以调整 `policyVersion` 和服务端容差，但不得改变整数坐标线协议或把容差交给客户端指定。
+D-013～D-041 已批准上述协议、资源、存储、站点模型、协议词法约束、ticket 摘要输入、调用方/Origin、TTL、Redis Store、不可解码状态语义、Cluster 延期、Widget、生产滑块生成边界、HTTP v0.1、公开限流/代理信任、可观测性、容量、容器、供应链、真实用户校准数据边界和漏洞披露渠道。D-023 冻结了 verify/consume 向量，D-026 独立冻结了 create 补充向量，D-027 冻结了 storageVersion 1 状态 JSON。D-014 确定性原型也已通过并由 Widget Vitest runner 执行。D-040 只批准隐私最小化采集方法；Q-004 的最终经验性容差仍是 v0.1 发布前门禁，且不得改变整数坐标线协议或把容差交给客户端指定。

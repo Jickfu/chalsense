@@ -4,6 +4,7 @@
 
 - 状态：v0.1 verify/consume 协议向量与 create 补充向量均已独立冻结；两套 Java Core runner 均已通过。
 - 机器可读向量：`docs/test-vectors/protocol-v1.json` 与 `docs/test-vectors/challenge-create-v1.json`。
+- 非协议冻结的攻击回归基线：`docs/test-vectors/attack-baseline-v1.json`；用途和限制见 [`attack-evaluation.md`](attack-evaluation.md)。
 - 状态序列化冻结向量：`docs/test-vectors/state-json-v1.json`；它依 D-027 固定 storageVersion 1 的字节与 reader 合约。冻结前草案 SHA-256 为 `8af527c5be54044c58608a5781c9f9b7ab9b3bd95f94dd5350648ed643947125`，首个冻结文件 SHA-256 为 `919142f4f087edeb01a3a4e555909caa7cca7ed5690466f8e4fa4ca9ea7f1c87`。
 - 首个冻结文件 SHA-256：`1ecdf006dbd26b0a1ce0ee1915c843465178b2d7fcb673513ffa7c9487a8c666`。
 - create 补充冻结文件 SHA-256：`2d037c079d2def5e03985a66ae0e3c40be2924123a99d2da81b515188817d799`；其冻结前草案 SHA-256 为 `e0106b7a1a0e4bb11bbb9460cdbf7287b3a80aae41ca88fd07db640fd0bc9db9`。

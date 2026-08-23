@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ChalSense 容差校准工具</title>
+  <link rel="stylesheet" href="./calibration.css">
+</head>
+<body>
+  <main>
+    <h1>ChalSense 容差校准工具</h1>
+    <p>这是独立研究工具，不会调用 ChalSense Server，也不会证明参与者一定是真人。</p>
+    <section class="privacy" aria-labelledby="privacy-title">
+      <h2 id="privacy-title">采集边界</h2>
+      <p>数据只保存在本页内存，页面不会联网。仅聚合落点绝对误差、完成耗时、输入类型、显示宽度和 DPR 的粗粒度分桶；不保存完整轨迹、IP、User-Agent、业务标识、时间戳或持久用户/会话标识。</p>
+      <p>仅限已满 18 周岁的自愿参与者。交付文件前可以关闭页面或删除文件退出；文件去关联并合并后，因不含身份标识，将无法定位并撤回个人记录。</p>
+      <label><input id="consent" type="checkbox"> 我已满 18 周岁，已阅读上述说明并自愿参加。</label>
+    </section>
+    <canvas width="320" height="180" role="slider" aria-label="滑块容差校准位置" aria-valuemin="0" aria-valuemax="270" aria-valuenow="30"></canvas>
+    <p id="status" role="status">确认同意后开始。</p>
+    <div class="actions">
+      <button id="start" type="button">开始一次</button>
+      <button id="submit" type="button" disabled>确认位置</button>
+      <button id="export" type="button" disabled>导出聚合 JSON</button>
+    </div>
+    <p>本地已完成：<strong id="count">0</strong> 次。建议每位参与者完成 10 次以内，避免疲劳影响。</p>
+  </main>
+  <script type="module" src="./calibration.mjs"></script>
+</body>
+</html>

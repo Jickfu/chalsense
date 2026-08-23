@@ -62,7 +62,7 @@ management:
         include: prometheus
 ```
 
-指标只含固定 `operation/outcome/reason` 标签。审计 logger `io.github.chalsense.audit` 输出单行 JSON 消息；不得配置外部 access log、APM 或代理记录请求体、Authorization、动态资源 URL、`challengeId`、ticket、`contextDigest`、轨迹、IP 或限流 client key。`/livez` 不访问 Redis，`/readyz` 只返回 Redis 必要依赖的汇总 UP/DOWN。完整边界见[可观测性规范](../docs/observability.md)。
+指标只含固定 `operation/outcome/reason` 标签。审计 logger `io.github.chalsense.audit` 默认以 `INFO` 输出单行 JSON 消息；`chalsense.audit.level` 只供容量测试或部署方明确调整日志级别，关闭 INFO 会失去对应审计行，不能视为等价的生产观测配置。不得配置外部 access log、APM 或代理记录请求体、Authorization、动态资源 URL、`challengeId`、ticket、`contextDigest`、轨迹、IP 或限流 client key。`/livez` 不访问 Redis，`/readyz` 只返回 Redis 必要依赖的汇总 UP/DOWN。完整边界见[可观测性规范](../docs/observability.md)。
 
 ## 安全边界
 

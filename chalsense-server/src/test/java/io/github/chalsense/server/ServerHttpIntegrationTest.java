@@ -16,6 +16,7 @@ import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -34,6 +35,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.LockSupport;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -180,34 +184,81 @@ class ServerHttpIntegrationTest {
         int warmup = boundedInteger("chalsense.capacity.warmup", 20, 0, 10_000);
         int iterations = boundedInteger("chalsense.capacity.iterations", 200, 1, 100_000);
         int concurrency = boundedInteger("chalsense.capacity.concurrency", 4, 1, 128);
+        int durationSeconds = boundedInteger("chalsense.capacity.duration-seconds", 0, 0, 1_800);
 
         for (int index = 0; index < warmup; index++) runCapacityFlow(index);
         CapacitySamples samples = new CapacitySamples();
+        ResourceSamples resources = new ResourceSamples(redis);
+        AtomicBoolean monitoring = new AtomicBoolean(true);
+        Thread monitor = new Thread(() -> {
+            while (monitoring.get()) {
+                resources.sample();
+                LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(1));
+            }
+            resources.sample();
+        }, "chalsense-capacity-resource-monitor");
+        monitor.setDaemon(true);
+        monitor.start();
         long started = System.nanoTime();
         ExecutorService executor = Executors.newFixedThreadPool(concurrency);
+        AtomicInteger flowCounter = new AtomicInteger();
         try {
-            List<CompletableFuture<Void>> tasks = new ArrayList<>(iterations);
-            for (int index = 0; index < iterations; index++) {
-                int flowIndex = index;
-                tasks.add(CompletableFuture.runAsync(() -> {
+            List<CompletableFuture<Void>> tasks = durationSeconds > 0
+                    ? durationTasks(executor, samples, flowCounter, concurrency, durationSeconds)
+                    : iterationTasks(executor, samples, flowCounter, iterations);
+            CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new)).join();
+        } finally {
+            executor.shutdown();
+            assertTrue(executor.awaitTermination(10, TimeUnit.SECONDS));
+            monitoring.set(false);
+            monitor.join(TimeUnit.SECONDS.toMillis(2));
+        }
+        double elapsedSeconds = (System.nanoTime() - started) / 1_000_000_000.0;
+        String report = samples.report(flowCounter.get(), concurrency, durationSeconds, elapsedSeconds, resources.finish());
+        Path reportPath = Path.of("target", "capacity-report.json");
+        Files.createDirectories(reportPath.getParent());
+        Files.writeString(reportPath, report);
+        System.out.println("CHALSENSE_CAPACITY_REPORT=" + report);
+    }
+
+    private static List<CompletableFuture<Void>> iterationTasks(ExecutorService executor, CapacitySamples samples,
+                                                                 AtomicInteger counter, int iterations) {
+        List<CompletableFuture<Void>> tasks = new ArrayList<>(iterations);
+        for (int index = 0; index < iterations; index++) {
+            int flowIndex = counter.getAndIncrement();
+            tasks.add(capacityTask(executor, samples, flowIndex));
+        }
+        return tasks;
+    }
+
+    private static List<CompletableFuture<Void>> durationTasks(ExecutorService executor, CapacitySamples samples,
+                                                                AtomicInteger counter, int concurrency,
+                                                                int durationSeconds) {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(durationSeconds);
+        List<CompletableFuture<Void>> tasks = new ArrayList<>(concurrency);
+        for (int worker = 0; worker < concurrency; worker++) {
+            tasks.add(CompletableFuture.runAsync(() -> {
+                while (System.nanoTime() < deadline) {
+                    int flowIndex = counter.getAndIncrement();
                     try {
                         samples.add(runCapacityFlow(flowIndex));
                     } catch (Exception exception) {
                         throw new IllegalStateException("capacity flow failed", exception);
                     }
-                }, executor));
-            }
-            CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new)).join();
-        } finally {
-            executor.shutdown();
-            assertTrue(executor.awaitTermination(10, TimeUnit.SECONDS));
+                }
+            }, executor));
         }
-        double elapsedSeconds = (System.nanoTime() - started) / 1_000_000_000.0;
-        String report = samples.report(iterations, concurrency, elapsedSeconds);
-        Path reportPath = Path.of("target", "capacity-report.json");
-        Files.createDirectories(reportPath.getParent());
-        Files.writeString(reportPath, report);
-        System.out.println("CHALSENSE_CAPACITY_REPORT=" + report);
+        return tasks;
+    }
+
+    private static CompletableFuture<Void> capacityTask(ExecutorService executor, CapacitySamples samples, int index) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                samples.add(runCapacityFlow(index));
+            } catch (Exception exception) {
+                throw new IllegalStateException("capacity flow failed", exception);
+            }
+        }, executor);
     }
 
     private static FlowSample runCapacityFlow(int index) throws Exception {
@@ -281,15 +332,17 @@ class ServerHttpIntegrationTest {
             values.add(sample);
         }
 
-        synchronized String report(int iterations, int concurrency, double elapsedSeconds) {
+        synchronized String report(int iterations, int concurrency, int requestedDurationSeconds,
+                                   double elapsedSeconds, ResourceSummary resources) {
             String target = System.getProperty("chalsense.capacity.target", "local").replaceAll("[^A-Za-z0-9._-]", "_");
             return "{\n"
-                    + "  \"schemaVersion\": 1,\n"
+                    + "  \"schemaVersion\": 2,\n"
                     + "  \"target\": \"" + target + "\",\n"
                     + "  \"javaVersion\": \"" + safeProperty("java.version") + "\",\n"
                     + "  \"os\": \"" + safeProperty("os.name") + " " + safeProperty("os.arch") + "\",\n"
                     + "  \"iterations\": " + iterations + ",\n"
                     + "  \"concurrency\": " + concurrency + ",\n"
+                    + "  \"requestedDurationSeconds\": " + requestedDurationSeconds + ",\n"
                     + "  \"elapsedSeconds\": " + decimal(elapsedSeconds) + ",\n"
                     + "  \"flowsPerSecond\": " + decimal(iterations / elapsedSeconds) + ",\n"
                     + "  \"latencyMicros\": {\n"
@@ -303,7 +356,8 @@ class ServerHttpIntegrationTest {
                     + "    \"resources\": " + distribution(values.stream().map(FlowSample::resourceBytes).toList(), 1) + ",\n"
                     + "    \"verify\": " + distribution(values.stream().map(FlowSample::verifyBytes).toList(), 1) + ",\n"
                     + "    \"consume\": " + distribution(values.stream().map(FlowSample::consumeBytes).toList(), 1) + "\n"
-                    + "  }\n"
+                    + "  },\n"
+                    + "  \"resources\": " + resources.json(iterations, elapsedSeconds) + "\n"
                     + "}\n";
         }
 
@@ -320,6 +374,99 @@ class ServerHttpIntegrationTest {
 
         private static String safeProperty(String name) {
             return System.getProperty(name, "unknown").replaceAll("[^A-Za-z0-9 ._()-]", "_");
+        }
+
+        private static String decimal(double value) {
+            return String.format(java.util.Locale.ROOT, "%.3f", value);
+        }
+    }
+
+    private static final class ResourceSamples {
+        private final RedisClient redis;
+        private final com.sun.management.OperatingSystemMXBean operatingSystem;
+        private final long startedWallNanos = System.nanoTime();
+        private final long startedCpuNanos;
+        private final long redisCommandsStarted;
+        private final long redisMemoryStarted;
+        private long maximumHeapBytes;
+        private long maximumRedisMemoryBytes;
+        private long observerCommands;
+        private int monitorErrors;
+
+        ResourceSamples(RedisClient redis) {
+            this.redis = redis;
+            this.operatingSystem = ManagementFactory.getOperatingSystemMXBean()
+                    instanceof com.sun.management.OperatingSystemMXBean bean ? bean : null;
+            this.startedCpuNanos = operatingSystem == null ? -1 : operatingSystem.getProcessCpuTime();
+            this.redisCommandsStarted = redisInfoValue(redis.info("stats"), "total_commands_processed");
+            this.redisMemoryStarted = redisInfoValue(redis.info("memory"), "used_memory");
+            this.observerCommands = 1;
+            this.maximumRedisMemoryBytes = redisMemoryStarted;
+            sample();
+        }
+
+        synchronized void sample() {
+            maximumHeapBytes = Math.max(maximumHeapBytes,
+                    ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed());
+            try {
+                maximumRedisMemoryBytes = Math.max(maximumRedisMemoryBytes,
+                        redisInfoValue(redis.info("memory"), "used_memory"));
+                observerCommands++;
+            } catch (RuntimeException exception) {
+                monitorErrors++;
+            }
+        }
+
+        synchronized ResourceSummary finish() {
+            long cpuNanos = operatingSystem == null || startedCpuNanos < 0
+                    ? -1 : Math.max(0, operatingSystem.getProcessCpuTime() - startedCpuNanos);
+            long wallNanos = Math.max(1, System.nanoTime() - startedWallNanos);
+            long commandsFinished = redisCommandsStarted;
+            long memoryFinished = maximumRedisMemoryBytes;
+            try {
+                memoryFinished = redisInfoValue(redis.info("memory"), "used_memory");
+                observerCommands++;
+                maximumRedisMemoryBytes = Math.max(maximumRedisMemoryBytes, memoryFinished);
+                commandsFinished = redisInfoValue(redis.info("stats"), "total_commands_processed");
+                observerCommands++;
+            } catch (RuntimeException exception) {
+                monitorErrors++;
+            }
+            return new ResourceSummary(cpuNanos < 0 ? -1 : (double) cpuNanos / wallNanos,
+                    maximumHeapBytes, redisCommandsStarted, Math.max(0, commandsFinished - redisCommandsStarted),
+                    observerCommands,
+                    redisMemoryStarted, maximumRedisMemoryBytes, memoryFinished, monitorErrors);
+        }
+
+        private static long redisInfoValue(String info, String name) {
+            for (String line : info.split("\\R")) {
+                if (line.startsWith(name + ":")) return Long.parseLong(line.substring(name.length() + 1).trim());
+            }
+            throw new IllegalArgumentException("Redis INFO does not contain " + name);
+        }
+    }
+
+    private record ResourceSummary(double processCpuCoresAverage, long heapUsedMaxBytes,
+                                   long redisCommandsStarted, long redisCommandsDelta, long observerCommands,
+                                   long redisMemoryStartBytes, long redisMemoryMaxBytes,
+                                   long redisMemoryEndBytes, int monitorErrors) {
+        String json(int iterations, double elapsedSeconds) {
+            long serverCommands = Math.max(0, redisCommandsDelta - observerCommands - iterations);
+            double commandsPerFlow = iterations == 0 ? 0 : (double) serverCommands / iterations;
+            double commandsPerSecond = serverCommands / elapsedSeconds;
+            return "{\"processCpuCoresAverage\":" + decimal(processCpuCoresAverage)
+                    + ",\"heapUsedMaxBytes\":" + heapUsedMaxBytes
+                    + ",\"redisCommandsStarted\":" + redisCommandsStarted
+                    + ",\"redisCommandsRawDelta\":" + redisCommandsDelta
+                    + ",\"redisObserverCommands\":" + observerCommands
+                    + ",\"testFixtureCommands\":" + iterations
+                    + ",\"serverRedisCommandsDelta\":" + serverCommands
+                    + ",\"redisCommandsPerFlow\":" + decimal(commandsPerFlow)
+                    + ",\"redisCommandsPerSecond\":" + decimal(commandsPerSecond)
+                    + ",\"redisMemoryStartBytes\":" + redisMemoryStartBytes
+                    + ",\"redisMemoryMaxBytes\":" + redisMemoryMaxBytes
+                    + ",\"redisMemoryEndBytes\":" + redisMemoryEndBytes
+                    + ",\"monitorErrors\":" + monitorErrors + "}";
         }
 
         private static String decimal(double value) {

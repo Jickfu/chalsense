@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "description": "Synthetic, non-human attack baseline. Acceptance does not prove a human user.",
+  "vectors": [
+    {
+      "id": "A-GUESS-001",
+      "category": "random_position",
+      "finalPieceX": 187500,
+      "track": [
+        {"x": 0, "y": 0, "t": 0, "event": "START"},
+        {"x": 125000, "y": 0, "t": 400, "event": "END"}
+      ],
+      "expectedOutcome": "VERIFICATION_FAILED"
+    },
+    {
+      "id": "A-TRACK-001",
+      "category": "two_point_exact_answer",
+      "finalPieceX": 593750,
+      "track": [
+        {"x": 0, "y": 0, "t": 0, "event": "START"},
+        {"x": 531250, "y": 0, "t": 600, "event": "END"}
+      ],
+      "expectedOutcome": "TICKET_ISSUED"
+    },
+    {
+      "id": "A-TRACK-002",
+      "category": "linear_exact_answer",
+      "finalPieceX": 593750,
+      "track": [
+        {"x": 0, "y": 0, "t": 0, "event": "START"},
+        {"x": 132813, "y": 0, "t": 150, "event": "MOVE"},
+        {"x": 265625, "y": 0, "t": 300, "event": "MOVE"},
+        {"x": 398438, "y": 0, "t": 450, "event": "MOVE"},
+        {"x": 531250, "y": 0, "t": 600, "event": "END"}
+      ],
+      "expectedOutcome": "TICKET_ISSUED"
+    },
+    {
+      "id": "A-TRACK-003",
+      "category": "zero_duration_exact_answer",
+      "finalPieceX": 593750,
+      "track": [
+        {"x": 0, "y": 0, "t": 0, "event": "START"},
+        {"x": 265625, "y": 0, "t": 0, "event": "MOVE"},
+        {"x": 531250, "y": 0, "t": 0, "event": "END"}
+      ],
+      "expectedOutcome": "TICKET_ISSUED"
+    },
+    {
+      "id": "A-TRACK-004",
+      "category": "bezier_like_exact_answer",
+      "finalPieceX": 593750,
+      "track": [
+        {"x": 0, "y": 0, "t": 0, "event": "START"},
+        {"x": 79688, "y": 12000, "t": 90, "event": "MOVE"},
+        {"x": 239063, "y": 21000, "t": 230, "event": "MOVE"},
+        {"x": 424999, "y": 9000, "t": 430, "event": "MOVE"},
+        {"x": 531250, "y": 0, "t": 650, "event": "END"}
+      ],
+      "expectedOutcome": "TICKET_ISSUED"
+    }
+  ],
+  "replay": {
+    "id": "A-REPLAY-001",
+    "sourceVector": "A-TRACK-002",
+    "expectedFirstOutcome": "TICKET_ISSUED",
+    "expectedSecondOutcome": "CHALLENGE_UNAVAILABLE"
+  }
+}

@@ -6,7 +6,7 @@
 
 - **事实**：基准通过两个本地 Server 实例、真实 Redis/Valkey、JDK `HttpClient` 和程序生成的仓库自有测试图片，执行 create、两个资源读取、verify 与 trusted consume 完整流程。
 - **事实**：客户端输入、坐标、轨迹、时间戳和回调仍不可信；基准为了构造可成功的合成请求，会在计时区间之外直接读取隔离测试 keyspace 中的 challenge state。生产代码和接入方不得使用这条路径。
-- **事实**：报告只含运行目标、Java/OS、并发量、吞吐、分位延迟和载荷字节数，不含 `siteKey`、IP、challenge、ticket、轨迹、答案或请求体。
+- **事实**：报告只含运行目标、Java/OS、并发量、吞吐、分位延迟、载荷字节数，以及进程 CPU core 平均占用、heap 峰值、Redis 命令与内存汇总，不含 `siteKey`、IP、challenge、ticket、轨迹、答案或请求体。
 - **推论**：GitHub 托管 runner 的邻居负载和虚拟机规格会波动，单次结果适合比较同拓扑回归，不足以推导生产容量。
 - **建议**：生产限额与告警应在目标机器、目标 Redis 网络拓扑、真实图片规格和预期并发下重新校准，并保留故障与突发余量。
 - **工作假设**：首轮参考运行使用 Java 21、Redis OSS 7.2.14、Valkey 7.2.14、20 次预热、200 次测量和 4 个并发流程；这些参数不是冻结的协议或安全阈值。
@@ -20,13 +20,17 @@
 3. `challenge_verify`；
 4. `ticket_consume`。
 
-`flowsPerSecond` 从全部测量 flow 的共同起止时间计算。每个阶段报告 nearest-rank `p50`、`p95`、`p99` 与 `max`；延迟单位是微秒。载荷分布使用同样算法，单位是响应 body 字节。预热样本不进入报告。任一状态码或状态机断言失败都会让任务失败；数值本身暂不设置跨环境硬门槛。
+`flowsPerSecond` 从全部测量 flow 的共同起止时间计算。每个阶段报告 nearest-rank `p50`、`p95`、`p99` 与 `max`；延迟单位是微秒。载荷分布使用同样算法，单位是响应 body 字节。预热样本不进入报告。`duration-seconds > 0` 时由固定数量 worker 持续运行到截止时间，报告实际 flow 数；否则使用固定 iterations。任一状态码或状态机断言失败都会让任务失败；数值本身暂不设置跨环境硬门槛。
 
-基准保留真实的图片生成、Redis 状态操作、限流和隐私安全审计开销。基准模式只扩大隔离测试站点的 token bucket，避免校准工具被普通集成测试的示例限额截断；普通测试仍验证 429 和 `Retry-After`。
+资源汇总覆盖承载两个 Server 和测试驱动的同一 JVM 进程，因此 CPU/heap 不是单 Server 指标。Redis `total_commands_processed` 会明确扣除监控 `INFO` 与测试夹具每 flow 一次的直接 state GET，再报告服务路径估算命令数；若监控出现错误，该字段不得用于阈值。资源采样本身仍会产生轻微扰动。
+
+基准保留真实的图片生成、Redis 状态操作、限流和 Micrometer 安全事件计数开销。GitHub Actions 容量任务将 `chalsense.audit.level` 设为 `WARN`，避免逐请求审计行充满共享 runner 日志并显著改变吞吐；因此结果不包含生产日志 sink 的 I/O 成本，目标部署仍需单独评估实际日志管道。基准模式只扩大隔离测试站点的 token bucket，避免校准工具被普通集成测试的示例限额截断；普通测试仍验证 429 和 `Retry-After`。
 
 ## 执行方式
 
 GitHub Actions 的 `Capacity benchmark` 仅支持手动触发，不加入每次 push/PR。默认依次运行 Redis 与 Valkey，结果写入任务摘要。调整输入时必须记录 warmup、iterations、concurrency、提交 SHA、运行链接及后端版本。
+
+15 分钟稳定性参考应选择单个 backend，并设置 `duration_seconds=900`；共享 runner 结果仍只验证工具、泄漏趋势和回归，不替代目标部署规格。
 
 具有专用 Redis/Valkey 的本地环境可运行：
 
